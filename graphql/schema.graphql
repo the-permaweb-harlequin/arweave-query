@@ -1,0 +1,116 @@
+# Arweave GraphQL Schema (subset for codegen)
+# This is based on the Arweave gateway GraphQL schema
+
+type Query {
+  transactions(
+    ids: [ID!]
+    owners: [String!]
+    recipients: [String!]
+    tags: [TagFilter!]
+    bundledIn: [ID!]
+    block: BlockFilter
+    first: Int = 10
+    after: String
+    sort: SortOrder = HEIGHT_DESC
+  ): TransactionConnection!
+  
+  transaction(id: ID!): Transaction
+  
+  blocks(
+    ids: [ID!]
+    height: BlockFilter
+    first: Int = 10
+    after: String
+    sort: SortOrder = HEIGHT_DESC
+  ): BlockConnection!
+  
+  block(id: String!): Block
+}
+
+type TransactionConnection {
+  pageInfo: PageInfo!
+  edges: [TransactionEdge!]!
+}
+
+type TransactionEdge {
+  cursor: String!
+  node: Transaction!
+}
+
+type Transaction {
+  id: ID!
+  anchor: String!
+  signature: String!
+  recipient: String!
+  owner: Owner!
+  fee: Amount!
+  quantity: Amount!
+  data: MetaData!
+  tags: [Tag!]!
+  block: Block
+  parent: Transaction
+  bundledIn: Transaction
+}
+
+type Owner {
+  address: String!
+  key: String!
+}
+
+type Amount {
+  winston: String!
+  ar: String!
+}
+
+type MetaData {
+  size: String!
+  type: String
+}
+
+type Tag {
+  name: String!
+  value: String!
+}
+
+type Block {
+  id: ID!
+  timestamp: Int!
+  height: Int!
+  previous: String!
+}
+
+type BlockConnection {
+  pageInfo: PageInfo!
+  edges: [BlockEdge!]!
+}
+
+type BlockEdge {
+  cursor: String!
+  node: Block!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+input TagFilter {
+  name: String!
+  values: [String!]!
+  op: TagOperator = EQ
+}
+
+input BlockFilter {
+  min: Int
+  max: Int
+}
+
+enum TagOperator {
+  EQ
+  NEQ
+}
+
+enum SortOrder {
+  HEIGHT_ASC
+  HEIGHT_DESC
+}

@@ -1,0 +1,80 @@
+query transactions(
+  $owners: [String!]
+  $recipients: [String!]
+  $tags: [TagFilter!]
+  $block: BlockFilter
+  $first: Int
+  $after: String
+) {
+  transactions(
+    owners: $owners
+    recipients: $recipients
+    tags: $tags
+    block: $block
+    first: $first
+    after: $after
+  ) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        id
+        owner {
+          address
+        }
+        recipient
+        tags {
+          name
+          value
+        }
+        block {
+          id
+          height
+          timestamp
+        }
+        fee {
+          winston
+        }
+        quantity {
+          winston
+        }
+        data {
+          size
+          type
+        }
+      }
+    }
+  }
+}
+
+query transaction($id: ID!) {
+  transaction(id: $id) {
+    id
+    owner {
+      address
+    }
+    recipient
+    tags {
+      name
+      value
+    }
+    block {
+      id
+      height
+      timestamp
+    }
+    fee {
+      winston
+    }
+    quantity {
+      winston
+    }
+    data {
+      size
+      type
+    }
+  }
+}

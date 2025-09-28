@@ -1,0 +1,38 @@
+query blocks(
+  $ids: [ID!]
+  $height: BlockFilter
+  $first: Int
+  $after: String
+  $sort: SortOrder
+) {
+  blocks(
+    ids: $ids
+    height: $height
+    first: $first
+    after: $after
+    sort: $sort
+  ) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        id
+        timestamp
+        height
+        previous
+      }
+    }
+  }
+}
+
+query block($id: String!) {
+  block(id: $id) {
+    id
+    timestamp
+    height
+    previous
+  }
+}
