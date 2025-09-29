@@ -1,7 +1,7 @@
 name: Bug Report
 description: File a bug report
-title: "[Bug]: "
-labels: ["bug", "triage"]
+title: '[Bug]: '
+labels: ['bug', 'triage']
 body:
   - type: markdown
     attributes:
@@ -32,9 +32,9 @@ body:
       label: Which package is affected?
       multiple: true
       options:
-        - "@arweave-query/core"
-        - "@arweave-query/react"
-        - "@arweave-query/cli"
+        - '@arweave-query/core'
+        - '@arweave-query/react'
+        - '@arweave-query/cli'
         - Other
     validations:
       required: true

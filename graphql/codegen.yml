@@ -1,23 +1,23 @@
-schema: './schema.graphql'
-documents: './queries/**/*.graphql'
+schema: './graphql/schema.graphql'
+documents: './graphql/queries/**/*.graphql'
 generates:
   # Core types (no React dependencies)
-  ../packages/core/src/generated/graphql.ts:
+  ./packages/core/src/generated/graphql.ts:
     plugins:
       - 'typescript'
       - 'typescript-operations'
       - 'typescript-graphql-request'
     config:
-      skipTypename: false
+      skipTypename: true
       withHooks: false
       scalars:
         ID: string
         String: string
         Int: number
         Boolean: boolean
-  
+
   # React hooks (depends on core)
-  ../packages/frameworks/react/src/generated/hooks.tsx:
+  ./packages/frameworks/react/src/generated/hooks.tsx:
     plugins:
       - 'typescript'
       - 'typescript-operations'

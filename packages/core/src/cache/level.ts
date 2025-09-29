@@ -1,4 +1,6 @@
-import type { CacheProvider } from '../types/index.js';
+import type { Level } from "level";
+import type { MemoryLevel } from "memory-level";
+import type { CacheProvider } from "../types/index.js";
 
 export interface LevelCacheConfig {
   location?: string;
@@ -6,10 +8,13 @@ export interface LevelCacheConfig {
 }
 
 export class LevelCache implements CacheProvider {
-  private db: any;
+  private db: Level<string, string> | MemoryLevel<string, string>;
   private defaultTtl: number;
 
-  constructor(levelInstance: any, config: LevelCacheConfig = {}) {
+  constructor(
+    levelInstance: Level<string, string> | MemoryLevel<string, string>,
+    config: LevelCacheConfig = {},
+  ) {
     this.db = levelInstance;
     this.defaultTtl = config.ttl || 3600000; // 1 hour default
   }
@@ -17,17 +22,18 @@ export class LevelCache implements CacheProvider {
   async get<T>(key: string): Promise<T | null> {
     try {
       const data = await this.db.get(key);
+      if (!data) return null;
       const parsed = JSON.parse(data);
-      
+
       // Check if expired
       if (parsed.expires && Date.now() > parsed.expires) {
         await this.delete(key);
         return null;
       }
-      
+
       return parsed.value;
     } catch (error: any) {
-      if (error.code === 'LEVEL_NOT_FOUND') {
+      if (error.code === "LEVEL_NOT_FOUND") {
         return null;
       }
       throw error;
@@ -41,7 +47,7 @@ export class LevelCache implements CacheProvider {
       expires,
       created: Date.now(),
     });
-    
+
     await this.db.put(key, data);
   }
 
@@ -49,7 +55,7 @@ export class LevelCache implements CacheProvider {
     try {
       await this.db.del(key);
     } catch (error: any) {
-      if (error.code !== 'LEVEL_NOT_FOUND') {
+      if (error.code !== "LEVEL_NOT_FOUND") {
         throw error;
       }
     }

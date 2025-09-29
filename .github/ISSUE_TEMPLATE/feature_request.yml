@@ -1,7 +1,7 @@
 name: Feature Request
 description: Suggest an idea for this project
-title: "[Feature]: "
-labels: ["enhancement", "triage"]
+title: '[Feature]: '
+labels: ['enhancement', 'triage']
 body:
   - type: markdown
     attributes:
@@ -39,9 +39,9 @@ body:
       label: Which package should this feature be added to?
       multiple: true
       options:
-        - "@arweave-query/core"
-        - "@arweave-query/react"
-        - "@arweave-query/cli"
+        - '@arweave-query/core'
+        - '@arweave-query/react'
+        - '@arweave-query/cli'
         - New package
         - Other
     validations:

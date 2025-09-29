@@ -1,96 +1,56 @@
 import type {
   ArweaveQueryClientConfig,
-  QueryFilter,
+  TransactionsQueryFilter,
   QueryResult,
-  ArweaveTransaction,
-  QueryOptions,
   QueryProvider,
-  CacheProvider,
-} from './types/index.js';
+  DataQueryConfig,
+  DataProvider,
+} from "./types/index.js";
+import { Block, Transaction } from "./generated/graphql.js";
+import { GraphQLProvider } from "./node.js";
+import { WayfinderProvider } from "./providers/data/wayfinder.js";
 
-export class ArweaveQueryClient {
-  private providers: Map<string, QueryProvider> = new Map();
-  private cache?: CacheProvider;
-  private defaultProvider?: string;
+export class ArweaveQueryClient implements QueryProvider, DataProvider {
+  private transactionProvider: QueryProvider;
+  private dataProvider: DataProvider;
+  name = "arweave-query-client";
 
-  constructor(config: ArweaveQueryClientConfig) {
-    config.providers.forEach((provider) => {
-      this.providers.set(provider.name, provider);
-    });
-    
-    this.cache = config.cache;
-    this.defaultProvider = config.defaultProvider || config.providers[0]?.name;
+  constructor({
+    transactionProvider = new GraphQLProvider("https://arweave.net/graphql"),
+    dataProvider = new WayfinderProvider(),
+  }: ArweaveQueryClientConfig) {
+    this.transactionProvider = transactionProvider;
+    this.dataProvider = dataProvider;
+  }
+  async getTransaction(id: string): Promise<Transaction> {
+    return this.transactionProvider.getTransaction(id);
   }
 
-  async query(
-    filter: QueryFilter,
-    options: QueryOptions = {}
-  ): Promise<QueryResult> {
-    const providerName = options.provider || this.defaultProvider;
-    const provider = this.providers.get(providerName!);
-    
-    if (!provider) {
-      throw new Error(`Provider "${providerName}" not found`);
-    }
-
-    const cacheKey = options.cache !== false ? this.getCacheKey(filter, providerName!) : null;
-    
-    // Try cache first
-    if (cacheKey && this.cache) {
-      const cached = await this.cache.get<QueryResult>(cacheKey);
-      if (cached) {
-        return cached;
-      }
-    }
-
-    // Query provider
-    const result = await provider.query(filter);
-
-    // Cache result
-    if (cacheKey && this.cache && options.cache !== false) {
-      await this.cache.set(cacheKey, result, options.cacheTtl);
-    }
-
-    return result;
+  async getTransactions(
+    filter: TransactionsQueryFilter,
+  ): Promise<QueryResult<Transaction>> {
+    return this.transactionProvider.getTransactions(filter);
   }
 
-  async getTransaction(
-    id: string,
-    options: QueryOptions = {}
-  ): Promise<ArweaveTransaction | null> {
-    const providerName = options.provider || this.defaultProvider;
-    const provider = this.providers.get(providerName!);
-    
-    if (!provider) {
-      throw new Error(`Provider "${providerName}" not found`);
-    }
-
-    const cacheKey = options.cache !== false ? `tx:${id}:${providerName}` : null;
-    
-    // Try cache first
-    if (cacheKey && this.cache) {
-      const cached = await this.cache.get<ArweaveTransaction>(cacheKey);
-      if (cached) {
-        return cached;
-      }
-    }
-
-    // Query provider
-    const result = await provider.getTransaction(id);
-
-    // Cache result
-    if (cacheKey && this.cache && result && options.cache !== false) {
-      await this.cache.set(cacheKey, result, options.cacheTtl);
-    }
-
-    return result;
+  async getBlock(id: string): Promise<Block | null> {
+    return this.transactionProvider.getBlock(id);
   }
 
-  getProviders(): string[] {
-    return Array.from(this.providers.keys());
+  async getBlocks(
+    filter: TransactionsQueryFilter,
+  ): Promise<QueryResult<Block>> {
+    return this.transactionProvider.getBlocks(filter);
   }
 
-  private getCacheKey(filter: QueryFilter, provider: string): string {
-    return `query:${provider}:${JSON.stringify(filter)}`;
+  async getData<T>(
+    params: DataQueryConfig,
+  ): Promise<{ data: T; contentType: string | undefined }> {
+    return this.dataProvider.getData(params);
+  }
+
+  async getDataStream<T>(
+    params: DataQueryConfig,
+  ): Promise<{ data: ReadableStream<T>; contentType: string | undefined }> {
+    return this.dataProvider.getDataStream(params);
   }
 }

@@ -1,13 +1,18 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ArweaveQueryClient, type ArweaveQueryClientConfig } from '@arweave-query/core';
+import {
+  ArweaveQueryClient,
+  type ArweaveQueryClientConfig,
+} from '@arweave-query/core';
 
 interface ArweaveQueryContextValue {
   client: ArweaveQueryClient;
   queryClient: QueryClient;
 }
 
-const ArweaveQueryContext = createContext<ArweaveQueryContextValue | null>(null);
+const ArweaveQueryContext = createContext<ArweaveQueryContextValue | null>(
+  null
+);
 
 export interface ArweaveQueryProviderProps {
   children: ReactNode;
