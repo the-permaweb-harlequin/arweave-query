@@ -26,12 +26,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
 
       - name: Configure Git
         run: |
@@ -55,17 +53,17 @@ jobs:
         run: |
           # Get the current version
           CURRENT_VERSION="${{ steps.get-version.outputs.version }}"
-          
+
           # Extract base version (remove any pre-release tags)
           BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
-          
+
           # Get current timestamp for unique alpha version
           TIMESTAMP=$(date +%s)
           SHORT_SHA=$(git rev-parse --short HEAD)
-          
+
           # Create alpha version: X.Y.Z-alpha.TIMESTAMP.SHA
           ALPHA_VERSION="${BASE_VERSION}-alpha.${TIMESTAMP}.${SHORT_SHA}"
-          
+
           echo "alpha-version=$ALPHA_VERSION" >> $GITHUB_OUTPUT
           echo "📦 Alpha version: $ALPHA_VERSION"
 
@@ -116,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: always()
-    
+
     steps:
       - name: Determine status
         id: status
@@ -185,4 +183,3 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-

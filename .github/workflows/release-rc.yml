@@ -56,64 +56,62 @@ jobs:
                   node-version: 20
                   registry-url: "https://registry.npmjs.org"
 
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                  version: 8
+             - name: Setup pnpm
+               uses: pnpm/action-setup@v4
 
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
+             - name: Install dependencies
+               run: pnpm install --frozen-lockfile
 
-            - name: Build packages
-              run: pnpm build
+             - name: Build packages
+               run: pnpm build
 
-            - name: Get current version
-              id: get-version
-              run: |
-                  VERSION=$(node -p "require('./packages/core/package.json').version")
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+             - name: Get current version
+               id: get-version
+               run: |
+                   VERSION=$(node -p "require('./packages/core/package.json').version")
+                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            - name: Calculate RC version
-              id: calc-rc
-              run: |
-                  # Get the current version
-                  CURRENT_VERSION="${{ steps.get-version.outputs.version }}"
+             - name: Calculate RC version
+               id: calc-rc
+               run: |
+                   # Get the current version
+                   CURRENT_VERSION="${{ steps.get-version.outputs.version }}"
 
-                  # Extract base version (remove any pre-release tags)
-                  BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
+                   # Extract base version (remove any pre-release tags)
+                   BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
 
-                  # PR number for uniqueness
-                  PR_NUMBER="${{ github.event.pull_request.number }}"
-                  SHORT_SHA=$(git rev-parse --short HEAD)
+                   # PR number for uniqueness
+                   PR_NUMBER="${{ github.event.pull_request.number }}"
+                   SHORT_SHA=$(git rev-parse --short HEAD)
 
-                  # Create RC version: X.Y.Z-rc.PR.SHA
-                  RC_VERSION="${BASE_VERSION}-rc.${PR_NUMBER}.${SHORT_SHA}"
+                   # Create RC version: X.Y.Z-rc.PR.SHA
+                   RC_VERSION="${BASE_VERSION}-rc.${PR_NUMBER}.${SHORT_SHA}"
 
-                  echo "rc-version=$RC_VERSION" >> $GITHUB_OUTPUT
-                  echo "📦 RC version: $RC_VERSION"
+                   echo "rc-version=$RC_VERSION" >> $GITHUB_OUTPUT
+                   echo "📦 RC version: $RC_VERSION"
 
-            - name: Version packages for RC
-              run: |
-                  # Update version in all package.json files
-                  cd packages/core
-                  npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
-                  cd ../cli
-                  npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
-                  cd ../frameworks/react
-                  npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
+             - name: Version packages for RC
+               run: |
+                   # Update version in all package.json files
+                   cd packages/core
+                   npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
+                   cd ../cli
+                   npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
+                   cd ../frameworks/react
+                   npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
 
-            - name: Publish RC to npm
-              run: |
-                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-                  cd packages/core && pnpm publish --tag rc --access public --no-git-checks --provenance
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+             - name: Publish RC to npm
+               run: |
+                   echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+                   cd packages/core && pnpm publish --tag rc --access public --no-git-checks --provenance
+               env:
+                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-            - name: Comment on PR
-              uses: actions/github-script@v7
-              with:
-                  script: |
+             - name: Comment on PR
+               uses: actions/github-script@v7
+               with:
+                   script: |
                       const rcVersion = '${{ steps.calc-rc.outputs.rc-version }}';
                       const prNumber = context.issue.number;
 
