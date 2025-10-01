@@ -97,6 +97,12 @@ jobs:
           # Extract base version (remove any pre-release tags)
           BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
 
+          # If version is 0.0.0, bump to 0.1.0 for first RC
+          if [ "$BASE_VERSION" == "0.0.0" ]; then
+            BASE_VERSION="0.1.0"
+            echo "📈 Bumping from 0.0.0 to ${BASE_VERSION} for first release"
+          fi
+
           # PR number for uniqueness
           PR_NUMBER="${{ github.event.pull_request.number }}"
           SHORT_SHA=$(git rev-parse --short HEAD)

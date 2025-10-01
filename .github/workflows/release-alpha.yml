@@ -74,6 +74,12 @@ jobs:
           # Extract base version (remove any pre-release tags)
           BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
 
+          # If version is 0.0.0, bump to 0.1.0 for first alpha
+          if [ "$BASE_VERSION" == "0.0.0" ]; then
+            BASE_VERSION="0.1.0"
+            echo "📈 Bumping from 0.0.0 to ${BASE_VERSION} for first release"
+          fi
+
           # Get current timestamp for unique alpha version
           TIMESTAMP=$(date +%s)
           SHORT_SHA=$(git rev-parse --short HEAD)
