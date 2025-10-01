@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -92,16 +92,16 @@ jobs:
 
       - name: Version packages for alpha
         run: |
-          # Update version in package.json using node (works with workspace: protocol)
           ALPHA_VERSION="${{ steps.calc-alpha.outputs.alpha-version }}"
 
-          # Update core package version
+          # Update core package version using node with inline argument
           node -e "
             const fs = require('fs');
+            const version = process.argv[1];
             const pkg = JSON.parse(fs.readFileSync('packages/core/package.json', 'utf8'));
-            pkg.version = process.env.ALPHA_VERSION;
+            pkg.version = version;
             fs.writeFileSync('packages/core/package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
+          " "$ALPHA_VERSION"
 
           echo "✅ Updated @arweave-query/core to $ALPHA_VERSION"
 
