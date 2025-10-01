@@ -1,0 +1,245 @@
+name: Release (RC)
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened, labeled]
+        branches: [main, alpha]
+
+concurrency:
+    group: release-rc-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+jobs:
+    check-skip:
+        name: Check if RC should be skipped
+        runs-on: ubuntu-latest
+        outputs:
+            should-skip: ${{ steps.check.outputs.skip }}
+
+        steps:
+            - name: Check if this is a main<>alpha PR
+              id: check
+              run: |
+                  BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+                  HEAD_BRANCH="${{ github.event.pull_request.head.ref }}"
+
+                  # Skip RC releases for main<>alpha PRs
+                  if ([[ "$BASE_BRANCH" == "main" ]] && [[ "$HEAD_BRANCH" == "alpha" ]]) || \
+                     ([[ "$BASE_BRANCH" == "alpha" ]] && [[ "$HEAD_BRANCH" == "main" ]]); then
+                    echo "skip=true" >> $GITHUB_OUTPUT
+                    echo "⏭️ Skipping RC release for $HEAD_BRANCH -> $BASE_BRANCH PR"
+                  else
+                    echo "skip=false" >> $GITHUB_OUTPUT
+                    echo "✅ Will create RC release for $HEAD_BRANCH -> $BASE_BRANCH PR"
+                  fi
+
+    release-rc:
+        name: Release RC Version
+        runs-on: ubuntu-latest
+        needs: check-skip
+        if: needs.check-skip.outputs.should-skip == 'false'
+        permissions:
+            contents: write
+            pull-requests: write
+            id-token: write
+
+        steps:
+            - name: Checkout PR
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 8
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build packages
+              run: pnpm build
+
+            - name: Get current version
+              id: get-version
+              run: |
+                  VERSION=$(node -p "require('./packages/core/package.json').version")
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Calculate RC version
+              id: calc-rc
+              run: |
+                  # Get the current version
+                  CURRENT_VERSION="${{ steps.get-version.outputs.version }}"
+
+                  # Extract base version (remove any pre-release tags)
+                  BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
+
+                  # PR number for uniqueness
+                  PR_NUMBER="${{ github.event.pull_request.number }}"
+                  SHORT_SHA=$(git rev-parse --short HEAD)
+
+                  # Create RC version: X.Y.Z-rc.PR.SHA
+                  RC_VERSION="${BASE_VERSION}-rc.${PR_NUMBER}.${SHORT_SHA}"
+
+                  echo "rc-version=$RC_VERSION" >> $GITHUB_OUTPUT
+                  echo "📦 RC version: $RC_VERSION"
+
+            - name: Version packages for RC
+              run: |
+                  # Update version in all package.json files
+                  cd packages/core
+                  npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
+                  cd ../cli
+                  npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
+                  cd ../frameworks/react
+                  npm version ${{ steps.calc-rc.outputs.rc-version }} --no-git-tag-version
+
+            - name: Publish RC to npm
+              run: |
+                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+                  cd packages/core && pnpm publish --tag rc --access public --no-git-checks --provenance
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Comment on PR
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const rcVersion = '${{ steps.calc-rc.outputs.rc-version }}';
+                      const prNumber = context.issue.number;
+
+                      const body = `## 🚀 RC Release Published
+
+                      **Version:** \`${rcVersion}\`
+                      **Package:** \`@arweave-query/core\`
+                      **NPM Tag:** \`rc\`
+
+                      ### Install this RC:
+                      \`\`\`bash
+                      npm install @arweave-query/core@${rcVersion}
+                      # or
+                      pnpm add @arweave-query/core@${rcVersion}
+                      \`\`\`
+
+                      ### Test this RC:
+                      \`\`\`bash
+                      # Install the RC version
+                      pnpm add @arweave-query/core@rc
+
+                      # Your tests here
+                      \`\`\`
+
+                      ℹ️ This RC will be available on npm under the \`rc\` tag.`;
+
+                      // Find existing RC comment
+                      const comments = await github.rest.issues.listComments({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: prNumber,
+                      });
+
+                      const rcComment = comments.data.find(comment => 
+                        comment.user.type === 'Bot' && 
+                        comment.body.includes('🚀 RC Release Published')
+                      );
+
+                      if (rcComment) {
+                        // Update existing comment
+                        await github.rest.issues.updateComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          comment_id: rcComment.id,
+                          body: body,
+                        });
+                      } else {
+                        // Create new comment
+                        await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: prNumber,
+                          body: body,
+                        });
+                      }
+
+    notify:
+        name: Notify Release
+        runs-on: ubuntu-latest
+        needs: [check-skip, release-rc]
+        if: always() && needs.check-skip.outputs.should-skip == 'false'
+
+        steps:
+            - name: Determine status
+              id: status
+              run: |
+                  if [ "${{ needs.release-rc.result }}" == "success" ]; then
+                    echo "status=success" >> $GITHUB_OUTPUT
+                    echo "emoji=:building_construction:" >> $GITHUB_OUTPUT
+                    echo "color=#0099ff" >> $GITHUB_OUTPUT
+                  else
+                    echo "status=failure" >> $GITHUB_OUTPUT
+                    echo "emoji=:x:" >> $GITHUB_OUTPUT
+                    echo "color=#ff0000" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Get PR details
+              id: pr
+              run: |
+                  echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+                  echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+
+            - name: Send Slack notification
+              if: env.SLACK_WEBHOOK_URL != ''
+              uses: slackapi/slack-github-action@v1.26.0
+              with:
+                  payload: |
+                      {
+                        "text": "${{ steps.status.outputs.emoji }} RC Release ${{ steps.status.outputs.status }}",
+                        "attachments": [
+                          {
+                            "color": "${{ steps.status.outputs.color }}",
+                            "fields": [
+                              {
+                                "title": "Package",
+                                "value": "@arweave-query/core@rc",
+                                "short": true
+                              },
+                              {
+                                "title": "Environment",
+                                "value": "RC (Pull Request)",
+                                "short": true
+                              },
+                              {
+                                "title": "PR",
+                                "value": "<https://github.com/${{ github.repository }}/pull/${{ steps.pr.outputs.number }}|#${{ steps.pr.outputs.number }}: ${{ steps.pr.outputs.title }}>",
+                                "short": false
+                              },
+                              {
+                                "title": "Status",
+                                "value": "${{ steps.status.outputs.status }}",
+                                "short": true
+                              },
+                              {
+                                "title": "Install",
+                                "value": "`npm install @arweave-query/core@rc`",
+                                "short": true
+                              },
+                              {
+                                "title": "Workflow",
+                                "value": "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>",
+                                "short": false
+                              }
+                            ]
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,133 @@
+name: Release (Stable)
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-stable
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release Stable Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+          commit: 'chore: release stable packages'
+          title: 'chore: release stable packages'
+          version: pnpm changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm with provenance
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          pnpm publish --access public --no-git-checks --provenance
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+    
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.release.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=:rocket:" >> $GITHUB_OUTPUT
+            echo "color=#36a64f" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=:x:" >> $GITHUB_OUTPUT
+            echo "color=#ff0000" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.status.outputs.emoji }} Stable Release ${{ steps.status.outputs.status }}",
+              "attachments": [
+                {
+                  "color": "${{ steps.status.outputs.color }}",
+                  "fields": [
+                    {
+                      "title": "Package",
+                      "value": "@arweave-query/core",
+                      "short": true
+                    },
+                    {
+                      "title": "Environment",
+                      "value": "Stable (main)",
+                      "short": true
+                    },
+                    {
+                      "title": "Status",
+                      "value": "${{ steps.status.outputs.status }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
+                      "short": true
+                    },
+                    {
+                      "title": "Workflow",
+                      "value": "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>",
+                      "short": false
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+

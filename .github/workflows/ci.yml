@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [main, alpha]
   pull_request:
+    branches: ['**']
+  push:
     branches: [main, alpha]
 
 concurrency:
@@ -11,12 +11,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  quality:
+    name: Quality Checks
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20]
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,10 +24,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
@@ -39,7 +37,7 @@ jobs:
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -49,29 +47,65 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check formatting
+        run: pnpm format:check
+
       - name: Lint
         run: pnpm lint
 
       - name: Type check
         run: pnpm type-check
 
-      - name: Test
-        run: pnpm test:run
-
-      - name: Build
-        run: pnpm build
-
-  release:
-    needs: test
+  test:
+    name: Test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: ${{ matrix.node }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-node${{ matrix.node }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node${{ matrix.node }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test:run
+
+      - name: Build packages
+        run: pnpm build
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -79,7 +113,7 @@ jobs:
           node-version: 20
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
@@ -89,13 +123,62 @@ jobs:
       - name: Build packages
         run: pnpm build
 
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm release
-          commit: 'chore: release packages'
-          title: 'chore: release packages'
+      - name: Run integration tests (Node)
+        run: cd packages/core && pnpm test:integration:node
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ARIO_IMAGE: ghcr.io/ar-io/ar-io-core:latest
+
+      - name: Install Playwright browsers
+        run: cd packages/core && pnpm exec playwright install --with-deps chromium
+
+      - name: Run integration tests (Browser)
+        run: cd packages/core && pnpm test:integration:browser
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Check build artifacts
+        run: |
+          test -f packages/core/dist/index.js || exit 1
+          test -f packages/core/dist/node.js || exit 1
+          test -f packages/core/dist/web.js || exit 1
+          echo "✅ All build artifacts present"
+
+  all-checks-passed:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [quality, test, build]
+    if: always()
+    
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [ "${{ needs.quality.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ One or more checks failed"
+            exit 1
+          fi
+          echo "✅ All checks passed!"

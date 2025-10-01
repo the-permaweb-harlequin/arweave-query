@@ -2,31 +2,18 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { fetcher } from './fetcher';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-export type MakeEmpty<
-  T extends { [key: string]: unknown },
-  K extends keyof T,
-> = { [_ in K]?: never };
-export type Incremental<T> =
-  | T
-  | {
-      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
-    };
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
 };
 
 export type Amount = {
@@ -95,9 +82,11 @@ export type Query = {
   transactions: TransactionConnection;
 };
 
+
 export type QueryBlockArgs = {
   id?: InputMaybe<Scalars['String']['input']>;
 };
+
 
 export type QueryBlocksArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -107,9 +96,11 @@ export type QueryBlocksArgs = {
   sort?: InputMaybe<SortOrder>;
 };
 
+
 export type QueryTransactionArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryTransactionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -125,7 +116,7 @@ export type QueryTransactionsArgs = {
 
 export enum SortOrder {
   HeightAsc = 'HEIGHT_ASC',
-  HeightDesc = 'HEIGHT_DESC',
+  HeightDesc = 'HEIGHT_DESC'
 }
 
 export type Tag = {
@@ -142,7 +133,7 @@ export type TagFilter = {
 
 export enum TagOperator {
   Eq = 'EQ',
-  Neq = 'NEQ',
+  Neq = 'NEQ'
 }
 
 export type Transaction = {
@@ -182,110 +173,36 @@ export type BlocksQueryVariables = Exact<{
   sort?: InputMaybe<SortOrder>;
 }>;
 
-export type BlocksQuery = {
-  __typename?: 'Query';
-  blocks: {
-    __typename?: 'BlockConnection';
-    pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean };
-    edges: Array<{
-      __typename?: 'BlockEdge';
-      cursor: string;
-      node: {
-        __typename?: 'Block';
-        id: string;
-        timestamp: number;
-        height: number;
-        previous: string;
-      };
-    }>;
-  };
-};
+
+export type BlocksQuery = { __typename?: 'Query', blocks: { __typename?: 'BlockConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean }, edges: Array<{ __typename?: 'BlockEdge', cursor: string, node: { __typename?: 'Block', id: string, timestamp: number, height: number, previous: string } }> } };
 
 export type BlockQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
 
-export type BlockQuery = {
-  __typename?: 'Query';
-  block?: {
-    __typename?: 'Block';
-    id: string;
-    timestamp: number;
-    height: number;
-    previous: string;
-  } | null;
-};
+
+export type BlockQuery = { __typename?: 'Query', block?: { __typename?: 'Block', id: string, timestamp: number, height: number, previous: string } | null };
 
 export type TransactionsQueryVariables = Exact<{
-  owners?: InputMaybe<
-    Array<Scalars['String']['input']> | Scalars['String']['input']
-  >;
-  recipients?: InputMaybe<
-    Array<Scalars['String']['input']> | Scalars['String']['input']
-  >;
+  owners?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  recipients?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   tags?: InputMaybe<Array<TagFilter> | TagFilter>;
   block?: InputMaybe<BlockFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
 }>;
 
-export type TransactionsQuery = {
-  __typename?: 'Query';
-  transactions: {
-    __typename?: 'TransactionConnection';
-    pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean };
-    edges: Array<{
-      __typename?: 'TransactionEdge';
-      cursor: string;
-      node: {
-        __typename?: 'Transaction';
-        id: string;
-        anchor: string;
-        signature: string;
-        recipient: string;
-        owner: { __typename?: 'Owner'; address: string; key: string };
-        tags: Array<{ __typename?: 'Tag'; name: string; value: string }>;
-        block?: {
-          __typename?: 'Block';
-          id: string;
-          height: number;
-          timestamp: number;
-          previous: string;
-        } | null;
-        fee: { __typename?: 'Amount'; winston: string; ar: string };
-        quantity: { __typename?: 'Amount'; winston: string; ar: string };
-        data: { __typename?: 'MetaData'; size: string; type?: string | null };
-      };
-    }>;
-  };
-};
+
+export type TransactionsQuery = { __typename?: 'Query', transactions: { __typename?: 'TransactionConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean }, edges: Array<{ __typename?: 'TransactionEdge', cursor: string, node: { __typename?: 'Transaction', id: string, anchor: string, signature: string, recipient: string, owner: { __typename?: 'Owner', address: string, key: string }, tags: Array<{ __typename?: 'Tag', name: string, value: string }>, block?: { __typename?: 'Block', id: string, height: number, timestamp: number, previous: string } | null, fee: { __typename?: 'Amount', winston: string, ar: string }, quantity: { __typename?: 'Amount', winston: string, ar: string }, data: { __typename?: 'MetaData', size: string, type?: string | null } } }> } };
 
 export type TransactionQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
-export type TransactionQuery = {
-  __typename?: 'Query';
-  transaction?: {
-    __typename?: 'Transaction';
-    id: string;
-    anchor: string;
-    signature: string;
-    recipient: string;
-    owner: { __typename?: 'Owner'; address: string; key: string };
-    tags: Array<{ __typename?: 'Tag'; name: string; value: string }>;
-    block?: {
-      __typename?: 'Block';
-      id: string;
-      height: number;
-      timestamp: number;
-      previous: string;
-    } | null;
-    fee: { __typename?: 'Amount'; winston: string; ar: string };
-    quantity: { __typename?: 'Amount'; winston: string; ar: string };
-    data: { __typename?: 'MetaData'; size: string; type?: string | null };
-  } | null;
-};
+
+export type TransactionQuery = { __typename?: 'Query', transaction?: { __typename?: 'Transaction', id: string, anchor: string, signature: string, recipient: string, owner: { __typename?: 'Owner', address: string, key: string }, tags: Array<{ __typename?: 'Tag', name: string, value: string }>, block?: { __typename?: 'Block', id: string, height: number, timestamp: number, previous: string } | null, fee: { __typename?: 'Amount', winston: string, ar: string }, quantity: { __typename?: 'Amount', winston: string, ar: string }, data: { __typename?: 'MetaData', size: string, type?: string | null } } | null };
+
+
 
 export const BlocksDocument = `
     query blocks($ids: [ID!], $height: BlockFilter, $first: Int, $after: String, $sort: SortOrder) {
@@ -306,21 +223,21 @@ export const BlocksDocument = `
 }
     `;
 
-export const useBlocksQuery = <TData = BlocksQuery, TError = unknown>(
-  variables?: BlocksQueryVariables,
-  options?: Omit<UseQueryOptions<BlocksQuery, TError, TData>, 'queryKey'> & {
-    queryKey?: UseQueryOptions<BlocksQuery, TError, TData>['queryKey'];
-  }
-) => {
-  return useQuery<BlocksQuery, TError, TData>({
+export const useBlocksQuery = <
+      TData = BlocksQuery,
+      TError = unknown
+    >(
+      variables?: BlocksQueryVariables,
+      options?: Omit<UseQueryOptions<BlocksQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<BlocksQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<BlocksQuery, TError, TData>(
+      {
     queryKey: variables === undefined ? ['blocks'] : ['blocks', variables],
-    queryFn: fetcher<BlocksQuery, BlocksQueryVariables>(
-      BlocksDocument,
-      variables
-    ),
-    ...options,
-  });
-};
+    queryFn: fetcher<BlocksQuery, BlocksQueryVariables>(BlocksDocument, variables),
+    ...options
+  }
+    )};
 
 export const BlockDocument = `
     query block($id: String!) {
@@ -333,18 +250,21 @@ export const BlockDocument = `
 }
     `;
 
-export const useBlockQuery = <TData = BlockQuery, TError = unknown>(
-  variables: BlockQueryVariables,
-  options?: Omit<UseQueryOptions<BlockQuery, TError, TData>, 'queryKey'> & {
-    queryKey?: UseQueryOptions<BlockQuery, TError, TData>['queryKey'];
-  }
-) => {
-  return useQuery<BlockQuery, TError, TData>({
+export const useBlockQuery = <
+      TData = BlockQuery,
+      TError = unknown
+    >(
+      variables: BlockQueryVariables,
+      options?: Omit<UseQueryOptions<BlockQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<BlockQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<BlockQuery, TError, TData>(
+      {
     queryKey: ['block', variables],
     queryFn: fetcher<BlockQuery, BlockQueryVariables>(BlockDocument, variables),
-    ...options,
-  });
-};
+    ...options
+  }
+    )};
 
 export const TransactionsDocument = `
     query transactions($owners: [String!], $recipients: [String!], $tags: [TagFilter!], $block: BlockFilter, $first: Int, $after: String) {
@@ -399,27 +319,20 @@ export const TransactionsDocument = `
     `;
 
 export const useTransactionsQuery = <
-  TData = TransactionsQuery,
-  TError = unknown,
->(
-  variables?: TransactionsQueryVariables,
-  options?: Omit<
-    UseQueryOptions<TransactionsQuery, TError, TData>,
-    'queryKey'
-  > & {
-    queryKey?: UseQueryOptions<TransactionsQuery, TError, TData>['queryKey'];
+      TData = TransactionsQuery,
+      TError = unknown
+    >(
+      variables?: TransactionsQueryVariables,
+      options?: Omit<UseQueryOptions<TransactionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<TransactionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<TransactionsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['transactions'] : ['transactions', variables],
+    queryFn: fetcher<TransactionsQuery, TransactionsQueryVariables>(TransactionsDocument, variables),
+    ...options
   }
-) => {
-  return useQuery<TransactionsQuery, TError, TData>({
-    queryKey:
-      variables === undefined ? ['transactions'] : ['transactions', variables],
-    queryFn: fetcher<TransactionsQuery, TransactionsQueryVariables>(
-      TransactionsDocument,
-      variables
-    ),
-    ...options,
-  });
-};
+    )};
 
 export const TransactionDocument = `
     query transaction($id: ID!) {
@@ -458,21 +371,18 @@ export const TransactionDocument = `
 }
     `;
 
-export const useTransactionQuery = <TData = TransactionQuery, TError = unknown>(
-  variables: TransactionQueryVariables,
-  options?: Omit<
-    UseQueryOptions<TransactionQuery, TError, TData>,
-    'queryKey'
-  > & {
-    queryKey?: UseQueryOptions<TransactionQuery, TError, TData>['queryKey'];
-  }
-) => {
-  return useQuery<TransactionQuery, TError, TData>({
+export const useTransactionQuery = <
+      TData = TransactionQuery,
+      TError = unknown
+    >(
+      variables: TransactionQueryVariables,
+      options?: Omit<UseQueryOptions<TransactionQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<TransactionQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<TransactionQuery, TError, TData>(
+      {
     queryKey: ['transaction', variables],
-    queryFn: fetcher<TransactionQuery, TransactionQueryVariables>(
-      TransactionDocument,
-      variables
-    ),
-    ...options,
-  });
-};
+    queryFn: fetcher<TransactionQuery, TransactionQueryVariables>(TransactionDocument, variables),
+    ...options
+  }
+    )};

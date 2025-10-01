@@ -24,7 +24,7 @@ export default defineConfig({
         'react',
         'react-dom',
         '@tanstack/react-query',
-        '@arweave-query/core',
+        '@arweave-query/core-core',
       ],
     },
   },

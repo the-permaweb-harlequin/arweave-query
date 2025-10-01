@@ -10,6 +10,13 @@ generates:
     config:
       skipTypename: true
       withHooks: false
+      # Fix type portability issues
+      useTypeImports: true
+      dedupeFragments: true
+      inlineFragmentTypes: 'combine'
+      # Add explicit type annotations for document nodes
+      documentMode: 'documentNodeImportFragments'
+      # Scalar mappings
       scalars:
         ID: string
         String: string

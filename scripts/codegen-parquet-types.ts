@@ -251,6 +251,32 @@ function generateSqlQueries(
 }
 
 /**
+ * Generate column names object for type-safe column references
+ */
+function generateColumnNames(tableName: string, columns: ColumnInfo[]): string {
+  // Convert snake_case or kebab-case to PascalCase
+  const pascalCaseName = tableName
+    .split(/[_-]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+
+  let columnNames = `// Column names for ${tableName}\n`;
+  columnNames += `export const ${pascalCaseName}Columns = {\n`;
+
+  for (const col of columns) {
+    // Use the column name as both key and value for type safety
+    columnNames += `  ${col.column_name}: '${col.column_name}' as const,\n`;
+  }
+
+  columnNames += `} as const;\n\n`;
+
+  // Also generate a type for the column names
+  columnNames += `export type ${pascalCaseName}ColumnName = keyof typeof ${pascalCaseName}Columns;\n\n`;
+
+  return columnNames;
+}
+
+/**
  * Generate TypeScript interface from column info
  */
 function generateInterface(tableName: string, columns: ColumnInfo[]): string {
@@ -385,6 +411,10 @@ async function generateParquetTypes() {
             )
           );
         }
+
+        // Generate column names object
+        const columnNames = generateColumnNames(file.tableName, columns);
+        generatedTypes += columnNames;
 
         // Generate TypeScript interface
         const interfaceCode = generateInterface(file.tableName, columns);

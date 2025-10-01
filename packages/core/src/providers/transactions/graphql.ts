@@ -29,11 +29,11 @@ export class GraphQLProvider implements QueryProvider {
     filter: TransactionsQueryFilter,
   ): Promise<QueryResult<Transaction>> {
     const res = await this.sdk.transactions(filter);
-    const data = res.transactions.edges.map((edge) => edge.node);
-    const hasNextPage = res.transactions.pageInfo.hasNextPage;
-    const cursor =
-      res.transactions.edges[res.transactions.edges.length - 1].cursor;
-    const next = hasNextPage
+    const edges = res.transactions?.edges || [];
+    const data = edges.map((edge) => edge.node);
+    const hasNextPage = res.transactions?.pageInfo?.hasNextPage || false;
+    const cursor = edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
+    const next = hasNextPage && cursor
       ? async () =>
           this.getTransactions({
             ...filter,
@@ -58,10 +58,11 @@ export class GraphQLProvider implements QueryProvider {
 
   async getBlocks(filter: BlocksQueryFilter): Promise<QueryResult<Block>> {
     const res = await this.sdk.blocks(filter);
-    const data = res.blocks.edges.map((edge) => edge.node);
-    const hasNextPage = res.blocks.pageInfo.hasNextPage;
-    const cursor = res.blocks.edges[res.blocks.edges.length - 1].cursor;
-    const next = hasNextPage
+    const edges = res.blocks?.edges || [];
+    const data = edges.map((edge) => edge.node);
+    const hasNextPage = res.blocks?.pageInfo?.hasNextPage || false;
+    const cursor = edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
+    const next = hasNextPage && cursor
       ? async () => this.getBlocks({ ...filter, after: cursor })
       : undefined;
     return {

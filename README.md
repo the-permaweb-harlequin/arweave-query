@@ -31,6 +31,80 @@ The core package handles the core client and provider interfaces including their
 
 The react package has hooks for leveraging the providers in react apps
 
+# Testing
+
+## Unit Tests
+
+Run unit tests for all packages:
+
+```bash
+pnpm test
+```
+
+## Integration Tests
+
+Integration tests verify the package works with real AR-IO node infrastructure using Docker and Testcontainers.
+
+### Quick Start
+
+```bash
+# Setup (first time only)
+./scripts/setup-integration-tests.sh
+
+# Build the package
+cd packages/core
+pnpm build
+
+# Run all integration tests
+pnpm test:integration
+
+# Or run specific environments
+pnpm test:integration:node      # Node.js only
+pnpm test:integration:browser   # Browser only (headless Chrome)
+```
+
+See [INTEGRATION_TESTING.md](./INTEGRATION_TESTING.md) for detailed documentation.
+
+# Contributing
+
+We welcome contributions! This project has a comprehensive CI/CD pipeline with automated releases.
+
+## Quick Start
+
+```bash
+# Clone and setup
+git clone https://github.com/the-permaweb-harlequin/arweave-query.git
+cd arweave-query
+pnpm install
+
+# Run all checks
+pnpm ci
+
+# Create a changeset for your changes
+pnpm changeset:add
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
+
+## CI/CD & Releases
+
+This project uses automated releases with three environments:
+
+| Environment | Branch | Version Format | NPM Tag |
+|-------------|--------|----------------|---------|
+| **Stable** | `main` | `1.0.0` | `latest` |
+| **Alpha** | `alpha` | `1.0.0-alpha.TS.SHA` | `alpha` |
+| **RC** | PR to `main`/`alpha` | `1.0.0-rc.PR.SHA` | `rc` |
+
+**Install specific versions:**
+```bash
+npm install @arweave-query/core          # Latest stable
+npm install @arweave-query/core@alpha    # Alpha release
+npm install @arweave-query/core@rc       # Latest RC
+```
+
+See [CI_CD_SETUP.md](./CI_CD_SETUP.md) for complete documentation.
+
 # Tech stack
 
 for code formatting and linting, we want that at the top level shared on all packages

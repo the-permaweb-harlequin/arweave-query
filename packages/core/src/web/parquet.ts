@@ -24,8 +24,6 @@ export function createWebParquetProvider(
   const waddlerInstance = waddler({
     wasmUrl: config.duckdbConfig?.wasmUrl || "/duckdb.wasm",
     workerUrl: config.duckdbConfig?.workerUrl || "/worker.js",
-    accessMode:
-      (config.duckdbConfig?.readOnly ?? true) ? "read_only" : "read_write",
   });
 
   return new ParquetProvider({

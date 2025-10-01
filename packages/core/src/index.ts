@@ -10,3 +10,6 @@ export * from "./providers/transactions/parquet.js";
 
 // Cache
 export * from "./cache/index.js";
+
+// Utils
+export * from "./utils/encoding.js";
