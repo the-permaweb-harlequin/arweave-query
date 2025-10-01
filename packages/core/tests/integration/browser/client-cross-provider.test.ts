@@ -47,17 +47,23 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
     console.log("\n🔍 Starting browser cross-provider validation...\n");
 
     // Step 1: Query 100 transactions from Parquet
-    console.log("Step 1: Querying 100 transactions from Parquet provider (DuckDB WASM)...");
+    console.log(
+      "Step 1: Querying 100 transactions from Parquet provider (DuckDB WASM)...",
+    );
     const parquetResult = await parquetProvider.getTransactions({
       first: 100,
     });
 
     expect(parquetResult.data.length).toBeGreaterThan(0);
-    console.log(`✓ Found ${parquetResult.data.length} transactions in Parquet\n`);
+    console.log(
+      `✓ Found ${parquetResult.data.length} transactions in Parquet\n`,
+    );
 
     // Step 2: Take transaction IDs and query GraphQL
     const transactionIds = parquetResult.data.map((tx) => tx.id);
-    console.log(`Step 2: Querying ${transactionIds.length} transactions from GraphQL provider...`);
+    console.log(
+      `Step 2: Querying ${transactionIds.length} transactions from GraphQL provider...`,
+    );
 
     // Query transactions from GraphQL one by one
     const graphqlResults: Transaction[] = [];
@@ -122,7 +128,7 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
       // Compare recipient and track statistics
       const parquetHasRecipient = !!parquetTx.recipient;
       const gqlHasRecipient = !!gqlTx.recipient;
-      
+
       if (parquetHasRecipient && gqlHasRecipient) {
         comparisons.recipientStats.bothHave++;
       } else if (parquetHasRecipient) {
@@ -132,16 +138,19 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
       } else {
         comparisons.recipientStats.neitherHas++;
       }
-      
+
       // Recipients match if both have the same value OR both are null/undefined
-      const recipientsMatch = parquetTx.recipient === gqlTx.recipient || 
-                              (!parquetTx.recipient && !gqlTx.recipient);
-      
+      const recipientsMatch =
+        parquetTx.recipient === gqlTx.recipient ||
+        (!parquetTx.recipient && !gqlTx.recipient);
+
       if (recipientsMatch) {
         comparisons.recipientMatches++;
       } else {
         isFullMatch = false;
-        console.log(`  ⚠ Recipient mismatch for ${gqlTx.id.substring(0, 10)}...`);
+        console.log(
+          `  ⚠ Recipient mismatch for ${gqlTx.id.substring(0, 10)}...`,
+        );
         console.log(`     Parquet: ${parquetTx.recipient || "null/undefined"}`);
         console.log(`     GraphQL: ${gqlTx.recipient || "null/undefined"}`);
       }
@@ -151,7 +160,9 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
         comparisons.blockHeightMatches++;
       } else {
         isFullMatch = false;
-        console.log(`  ⚠ Block height mismatch for ${gqlTx.id.substring(0, 10)}...`);
+        console.log(
+          `  ⚠ Block height mismatch for ${gqlTx.id.substring(0, 10)}...`,
+        );
         console.log(`     Parquet: ${parquetTx.block?.height || "null"}`);
         console.log(`     GraphQL: ${gqlTx.block?.height || "null"}`);
       }
@@ -163,7 +174,9 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
         comparisons.tagCountMatches++;
       } else {
         isFullMatch = false;
-        console.log(`  ⚠ Tag count mismatch for ${gqlTx.id.substring(0, 10)}...`);
+        console.log(
+          `  ⚠ Tag count mismatch for ${gqlTx.id.substring(0, 10)}...`,
+        );
         console.log(`     Parquet: ${parquetTagCount} tags`);
         console.log(`     GraphQL: ${gqlTagCount} tags`);
       }
@@ -177,17 +190,35 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
     console.log("\n📊 Browser Validation Summary:");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log(`Total comparisons:     ${comparisons.total}`);
-    console.log(`Owner matches:         ${comparisons.ownerMatches} (${((comparisons.ownerMatches / comparisons.total) * 100).toFixed(1)}%)`);
-    console.log(`Recipient matches:     ${comparisons.recipientMatches} (${((comparisons.recipientMatches / comparisons.total) * 100).toFixed(1)}%) *`);
-    console.log(`Block height matches:  ${comparisons.blockHeightMatches} (${((comparisons.blockHeightMatches / comparisons.total) * 100).toFixed(1)}%)`);
-    console.log(`Tag count matches:     ${comparisons.tagCountMatches} (${((comparisons.tagCountMatches / comparisons.total) * 100).toFixed(1)}%)`);
-    console.log(`Full matches:          ${comparisons.fullMatches} (${((comparisons.fullMatches / comparisons.total) * 100).toFixed(1)}%)`);
+    console.log(
+      `Owner matches:         ${comparisons.ownerMatches} (${((comparisons.ownerMatches / comparisons.total) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `Recipient matches:     ${comparisons.recipientMatches} (${((comparisons.recipientMatches / comparisons.total) * 100).toFixed(1)}%) *`,
+    );
+    console.log(
+      `Block height matches:  ${comparisons.blockHeightMatches} (${((comparisons.blockHeightMatches / comparisons.total) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `Tag count matches:     ${comparisons.tagCountMatches} (${((comparisons.tagCountMatches / comparisons.total) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `Full matches:          ${comparisons.fullMatches} (${((comparisons.fullMatches / comparisons.total) * 100).toFixed(1)}%)`,
+    );
     console.log("");
     console.log("📦 Recipient Details:");
-    console.log(`  Both have recipient:    ${comparisons.recipientStats.bothHave} (values match)`);
-    console.log(`  Neither has recipient:  ${comparisons.recipientStats.neitherHas} (both null/undefined = match)`);
-    console.log(`  Only Parquet has:       ${comparisons.recipientStats.parquetHas} (mismatch)`);
-    console.log(`  Only GraphQL has:       ${comparisons.recipientStats.graphqlHas} (mismatch)`);
+    console.log(
+      `  Both have recipient:    ${comparisons.recipientStats.bothHave} (values match)`,
+    );
+    console.log(
+      `  Neither has recipient:  ${comparisons.recipientStats.neitherHas} (both null/undefined = match)`,
+    );
+    console.log(
+      `  Only Parquet has:       ${comparisons.recipientStats.parquetHas} (mismatch)`,
+    );
+    console.log(
+      `  Only GraphQL has:       ${comparisons.recipientStats.graphqlHas} (mismatch)`,
+    );
     console.log("");
     console.log("* Recipient match = same value OR both null/undefined");
     console.log("✅ DuckDB WASM successfully running in browser!");
@@ -195,7 +226,7 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
 
     // Assertions - we expect high match rates
     expect(comparisons.total).toBeGreaterThan(0);
-    
+
     // Core fields should have very high match rates (95%+)
     const ownerMatchRate = comparisons.ownerMatches / comparisons.total;
     expect(ownerMatchRate).toBeGreaterThanOrEqual(0.95);
@@ -213,7 +244,7 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
     // Query the same transaction from both providers
     const parquetResult = await parquetClient.getTransactions({ first: 1 });
     expect(parquetResult.data.length).toBeGreaterThan(0);
-    
+
     const txId = parquetResult.data[0].id;
     console.log(`Testing with transaction: ${txId}\n`);
 
@@ -226,7 +257,7 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
 
     // Try to get from GraphQL via client
     console.log("\nQuerying via GraphQL client...");
-    
+
     try {
       const graphqlTx = await graphqlClient.getTransaction(txId);
       console.log(`✓ Retrieved from GraphQL: ${graphqlTx.id}`);
@@ -239,7 +270,9 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
       console.log("\n✓ Both browser clients returned consistent data\n");
     } catch (error: any) {
       if (error.message?.includes("not found")) {
-        console.log(`⚠ Transaction not found in GraphQL (this is expected for older/fixture data)\n`);
+        console.log(
+          `⚠ Transaction not found in GraphQL (this is expected for older/fixture data)\n`,
+        );
       } else {
         throw error;
       }
@@ -253,7 +286,9 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
     const parquetResult = await parquetClient.getTransactions({ first: 5 });
     expect(parquetResult.data.length).toBeGreaterThan(0);
 
-    console.log(`Testing fallback with ${parquetResult.data.length} transactions...\n`);
+    console.log(
+      `Testing fallback with ${parquetResult.data.length} transactions...\n`,
+    );
 
     for (const tx of parquetResult.data) {
       // Try GraphQL client first
@@ -262,12 +297,16 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
         console.log(`✓ ${tx.id.substring(0, 10)}... found in GraphQL`);
       } catch (error: any) {
         if (error.message?.includes("not found")) {
-          console.log(`⚠ ${tx.id.substring(0, 10)}... not in GraphQL, falling back to Parquet`);
-          
+          console.log(
+            `⚠ ${tx.id.substring(0, 10)}... not in GraphQL, falling back to Parquet`,
+          );
+
           // Fallback to Parquet client (DuckDB WASM)
           const parquetTx = await parquetClient.getTransaction(tx.id);
           expect(parquetTx.id).toBe(tx.id);
-          console.log(`  ✓ Successfully retrieved from Parquet client (DuckDB WASM)`);
+          console.log(
+            `  ✓ Successfully retrieved from Parquet client (DuckDB WASM)`,
+          );
         } else {
           throw error;
         }
@@ -277,4 +316,3 @@ describe("Browser Integration - Client Cross-Provider Validation", () => {
     console.log("\n✓ Browser fallback mechanism validated\n");
   });
 });
-

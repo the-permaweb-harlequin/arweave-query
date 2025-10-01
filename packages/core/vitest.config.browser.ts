@@ -25,10 +25,18 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: /^@the-permaweb-harlequin\/arweave-query\/core\/web$/, replacement: resolve(__dirname, "./dist/web.js") },
-      { find: /^@the-permaweb-harlequin\/arweave-query\/core\/node$/, replacement: resolve(__dirname, "./dist/node.js") },
-      { find: /^@the-permaweb-harlequin\/arweave-query\/core$/, replacement: resolve(__dirname, "./dist/index.js") },
+      {
+        find: /^@the-permaweb-harlequin\/arweave-query\/core\/web$/,
+        replacement: resolve(__dirname, "./dist/web.js"),
+      },
+      {
+        find: /^@the-permaweb-harlequin\/arweave-query\/core\/node$/,
+        replacement: resolve(__dirname, "./dist/node.js"),
+      },
+      {
+        find: /^@the-permaweb-harlequin\/arweave-query\/core$/,
+        replacement: resolve(__dirname, "./dist/index.js"),
+      },
     ],
   },
 });
-

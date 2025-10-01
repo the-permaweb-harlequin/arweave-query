@@ -82,6 +82,7 @@ pnpm changeset:add
 ```
 
 Follow the prompts:
+
 - Select packages to include
 - Choose version bump type (major/minor/patch)
 - Write a summary of changes
@@ -113,6 +114,7 @@ git commit -m "chore: update dependencies"
 ```
 
 **Commit Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -138,6 +140,7 @@ gh pr create --base alpha --title "feat: my feature"
 ### 1. PR Created
 
 When you create a PR:
+
 - ✅ CI runs automatically (lint, test, build)
 - ✅ RC version is published to npm (unless PR is `main` ↔ `alpha`)
 - ✅ Bot comments with RC installation instructions
@@ -163,6 +166,7 @@ npm install @arweave-query/core@1.0.0-rc.123.abc1234
 ### 4. Merge
 
 Once approved:
+
 - PR will be merged to `alpha`
 - Alpha release will be published automatically
 
@@ -240,11 +244,13 @@ pnpm test:integration:browser
 ## Code Style
 
 We use:
+
 - **Prettier** for formatting
 - **ESLint** for linting
 - **TypeScript** for type safety
 
 Configuration is enforced via:
+
 - Pre-commit hooks (Husky + lint-staged)
 - CI checks
 
@@ -277,12 +283,14 @@ pnpm lint:fix
 ## Documentation
 
 Update documentation when:
+
 - Adding new features
 - Changing APIs
 - Adding examples
 - Fixing bugs (if docs were incorrect)
 
 Documentation locations:
+
 - API docs: In-code JSDoc comments
 - Examples: `README.md` files
 - Guides: `docs/` directory
@@ -308,9 +316,9 @@ By contributing, you agree that your contributions will be licensed under the sa
 ## Recognition
 
 Contributors will be:
+
 - Listed in CHANGELOG.md
 - Credited in release notes
 - Acknowledged in the project README
 
 Thank you for contributing! 🙏
-

@@ -61,7 +61,11 @@
     },
     "type-check": {
       "dependsOn": ["^build"],
-      "inputs": ["default", "^production", "{workspaceRoot}/tsconfig.base.json"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tsconfig.base.json"
+      ],
       "cache": true
     },
     "format": {
@@ -97,7 +101,14 @@
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "test", "lint", "type-check", "format", "format:check"]
+        "cacheableOperations": [
+          "build",
+          "test",
+          "lint",
+          "type-check",
+          "format",
+          "format:check"
+        ]
       }
     }
   },

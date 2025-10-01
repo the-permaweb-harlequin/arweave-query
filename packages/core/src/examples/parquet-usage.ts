@@ -41,7 +41,7 @@ async function nodeExample() {
   const tx = await provider.getTransaction("some-tx-id");
   console.log("Transaction:", tx.id);
 
-  await provider.close();
+  // Note: Provider cleanup is automatic (no close() method needed)
 }
 
 async function webExample() {
@@ -66,24 +66,36 @@ async function webExample() {
 
   console.log(`Found ${blocks.data.length} blocks`);
 
-  await provider.close();
+  // Note: Provider cleanup is automatic (no close() method needed)
 }
 
 async function universalExample() {
-  console.log("🌍 Universal Example (Auto-detects Platform)");
+  console.log("🌍 Universal Example");
 
-  // This will automatically use Node.js or Web backend based on environment
-  const provider = new ParquetProvider({
-    parquetUrls: {
-      blocks: "https://example.com/arweave/blocks.parquet",
-      transactions: "https://example.com/arweave/transactions.parquet",
-      tags: "https://example.com/arweave/tags.parquet",
-    },
-    duckdbConfig: {
-      platform: "auto", // Let Waddler detect the platform
-      readOnly: true,
-    },
-  });
+  // Use environment-specific provider creators
+  // For Node.js, use createNodeParquetProvider
+  // For Web, use createWebParquetProvider
+  const provider =
+    typeof window === "undefined"
+      ? createNodeParquetProvider({
+          parquetUrls: {
+            blocks: "https://example.com/arweave/blocks.parquet",
+            transactions: "https://example.com/arweave/transactions.parquet",
+            tags: "https://example.com/arweave/tags.parquet",
+          },
+          duckdbConfig: {
+            memory: ":memory:",
+            readOnly: false,
+          },
+        })
+      : createWebParquetProvider({
+          parquetUrls: {
+            blocks: "https://example.com/arweave/blocks.parquet",
+            transactions: "https://example.com/arweave/transactions.parquet",
+            tags: "https://example.com/arweave/tags.parquet",
+          },
+          duckdbConfig: {},
+        });
 
   // Complex query with multiple filters
   const results = await provider.getTransactions({
@@ -102,7 +114,7 @@ async function universalExample() {
     console.log("Next page:", nextPage.data.length);
   }
 
-  await provider.close();
+  // Note: Provider cleanup is automatic (no close() method needed)
 }
 
 // Usage examples

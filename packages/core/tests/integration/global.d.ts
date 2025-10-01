@@ -18,8 +18,8 @@ declare global {
   }
 
   // Both environments
+  // eslint-disable-next-line no-var
   var __ARIO_NODE__: ArIONodeContainer | undefined;
 }
 
 export {};
-

@@ -16,16 +16,21 @@ describe("Node Integration - GraphQL Query", () => {
     // Create GraphQL provider pointing at arweave.net/graphql
     // This ensures we have real data to test against
     provider = new GraphQLProvider("https://arweave.net/graphql");
-    
+
     // Check if the endpoint has data
     try {
       const testResult = await provider.getTransactions({ first: 1 });
       hasGraphQLData = testResult.data.length > 0;
       if (!hasGraphQLData) {
-        console.log("\n⚠️  GraphQL endpoint has no data - tests will be skipped\n");
+        console.log(
+          "\n⚠️  GraphQL endpoint has no data - tests will be skipped\n",
+        );
       }
     } catch (error) {
-      console.log("\n⚠️  GraphQL endpoint error - tests will be skipped:", error);
+      console.log(
+        "\n⚠️  GraphQL endpoint error - tests will be skipped:",
+        error,
+      );
     }
   });
 
@@ -87,7 +92,7 @@ describe("Node Integration - GraphQL Query", () => {
     // GraphQL endpoint should have access to the same data range: 911404-1094394
     const FIXTURE_MIN_HEIGHT = 911404;
     const FIXTURE_MAX_HEIGHT = 1094394;
-    
+
     const result = await provider.getTransactions({
       first: 10,
       block: {
@@ -206,7 +211,7 @@ describe("Node Integration - GraphQL Query", () => {
     });
 
     // Find a transaction with a recipient
-    const txWithRecipient = allTxs.data.find(tx => tx.recipient);
+    const txWithRecipient = allTxs.data.find((tx) => tx.recipient);
 
     if (txWithRecipient && txWithRecipient.recipient) {
       const recipientAddress = txWithRecipient.recipient;
@@ -224,8 +229,9 @@ describe("Node Integration - GraphQL Query", () => {
         });
       }
     } else {
-      console.log("No transactions with recipients found in fixture data - skipping recipient filter test");
+      console.log(
+        "No transactions with recipients found in fixture data - skipping recipient filter test",
+      );
     }
   });
 });
-

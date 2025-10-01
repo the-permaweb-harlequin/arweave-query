@@ -29,24 +29,24 @@ export default defineConfig({
         "graphql",
         "graphql-request",
         "graphql-tag",
-        
+
         // DuckDB - exclude all DuckDB packages and bindings
         "duckdb",
         "@duckdb/duckdb-wasm",
         "@duckdb/node-api",
         /^@duckdb\/.*/,
-        
+
         // Waddler
         "@atticusofsparta/waddler",
-        
+
         // Storage
         "level",
         "level-web",
         "memory-level",
-        
+
         // Wayfinder
         "@ar.io/wayfinder-core",
-        
+
         // Node built-ins
         /^node:.*/,
         "crypto",

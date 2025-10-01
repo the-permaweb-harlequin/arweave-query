@@ -32,14 +32,16 @@ export class GraphQLProvider implements QueryProvider {
     const edges = res.transactions?.edges || [];
     const data = edges.map((edge) => edge.node);
     const hasNextPage = res.transactions?.pageInfo?.hasNextPage || false;
-    const cursor = edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
-    const next = hasNextPage && cursor
-      ? async () =>
-          this.getTransactions({
-            ...filter,
-            after: cursor,
-          })
-      : undefined;
+    const cursor =
+      edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
+    const next =
+      hasNextPage && cursor
+        ? async () =>
+            this.getTransactions({
+              ...filter,
+              after: cursor,
+            })
+        : undefined;
     return {
       data,
       hasNextPage,
@@ -61,10 +63,12 @@ export class GraphQLProvider implements QueryProvider {
     const edges = res.blocks?.edges || [];
     const data = edges.map((edge) => edge.node);
     const hasNextPage = res.blocks?.pageInfo?.hasNextPage || false;
-    const cursor = edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
-    const next = hasNextPage && cursor
-      ? async () => this.getBlocks({ ...filter, after: cursor })
-      : undefined;
+    const cursor =
+      edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
+    const next =
+      hasNextPage && cursor
+        ? async () => this.getBlocks({ ...filter, after: cursor })
+        : undefined;
     return {
       data,
       hasNextPage,

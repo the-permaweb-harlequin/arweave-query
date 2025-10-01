@@ -13,6 +13,7 @@ This directory contains integration tests for the arweave-query package using re
 ### Prerequisites
 
 1. Build the package first:
+
    ```bash
    pnpm build
    ```
@@ -53,6 +54,7 @@ Runs both Node and Browser integration tests.
 ## Test Container Configuration
 
 The AR-IO node container is configured with:
+
 - Port: 4000 (mapped to a random available port)
 - GraphQL endpoint: `/graphql`
 - Datasets endpoint: `/ar-io/datasets`
@@ -94,9 +96,9 @@ const result = await provider.getTransactions({ first: 10 });
 ## Timeouts
 
 Integration tests have extended timeouts to account for:
+
 - Container startup time (~30-60 seconds)
 - Image pulling (first run)
 - AR-IO node initialization
 
 Default timeout is set to 120 seconds (2 minutes).
-

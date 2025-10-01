@@ -14,7 +14,7 @@ describe("Node Integration - Parquet Query", () => {
 
     // Use AR-IO node's datasets endpoint
     const datasetsBaseUrl = `${arIONode.apiUrl}/local/datasets`;
-    
+
     // Create provider using the built package
     provider = createNodeParquetProvider({
       parquetUrls: {
@@ -76,7 +76,7 @@ describe("Node Integration - Parquet Query", () => {
     // Parquet fixture data range: 911404-1094394
     const FIXTURE_MIN_HEIGHT = 911404;
     const FIXTURE_MAX_HEIGHT = 1094394;
-    
+
     // Query a subset within the fixture range
     const result = await provider.getTransactions({
       first: 10,
@@ -106,7 +106,7 @@ describe("Node Integration - Parquet Query", () => {
     // Note: This test might return 0 results if no transactions in the fixture
     // have the specified tag - that's okay for integration testing
     expect(Array.isArray(result.data)).toBe(true);
-    
+
     if (result.data.length > 0) {
       // If we got results, verify they have tags
       const firstTx = result.data[0];
@@ -164,4 +164,3 @@ describe("Node Integration - Parquet Query", () => {
     expect(tx.id).toBe(txId);
   });
 });
-

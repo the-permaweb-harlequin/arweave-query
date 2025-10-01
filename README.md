@@ -90,13 +90,14 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
 
 This project uses automated releases with three environments:
 
-| Environment | Branch | Version Format | NPM Tag |
-|-------------|--------|----------------|---------|
-| **Stable** | `main` | `1.0.0` | `latest` |
-| **Alpha** | `alpha` | `1.0.0-alpha.TS.SHA` | `alpha` |
-| **RC** | PR to `main`/`alpha` | `1.0.0-rc.PR.SHA` | `rc` |
+| Environment | Branch               | Version Format       | NPM Tag  |
+| ----------- | -------------------- | -------------------- | -------- |
+| **Stable**  | `main`               | `1.0.0`              | `latest` |
+| **Alpha**   | `alpha`              | `1.0.0-alpha.TS.SHA` | `alpha`  |
+| **RC**      | PR to `main`/`alpha` | `1.0.0-rc.PR.SHA`    | `rc`     |
 
 **Install specific versions:**
+
 ```bash
 npm install @arweave-query/core          # Latest stable
 npm install @arweave-query/core@alpha    # Alpha release

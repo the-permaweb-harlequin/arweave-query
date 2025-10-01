@@ -75,7 +75,7 @@ describe("Browser Integration - Parquet Query", () => {
     // Parquet fixture data range: 911404-1094394
     const FIXTURE_MIN_HEIGHT = 911404;
     const FIXTURE_MAX_HEIGHT = 1094394;
-    
+
     // Query a subset within the fixture range
     const result = await provider.getTransactions({
       first: 10,
@@ -156,4 +156,3 @@ describe("Browser Integration - Parquet Query", () => {
     expect(tx.id).toBe(txId);
   });
 });
-
