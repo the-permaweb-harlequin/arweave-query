@@ -5,6 +5,25 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-permaweb-harlequin/arweave-query.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/the-permaweb-harlequin/arweave-query#readme",
+  "bugs": {
+    "url": "https://github.com/the-permaweb-harlequin/arweave-query/issues"
+  },
+  "keywords": [
+    "arweave",
+    "query",
+    "graphql",
+    "parquet",
+    "blockchain",
+    "permaweb"
+  ],
+  "author": "the-permaweb-harlequin",
+  "license": "MIT",
   "exports": {
     ".": {
       "import": "./dist/index.js",
