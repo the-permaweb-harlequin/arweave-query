@@ -44,6 +44,18 @@ jobs:
           pnpm codegen
           pnpm codegen:parquet
 
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Run tests
+        run: pnpm test:run
+
       - name: Build packages
         run: pnpm build
 
@@ -74,13 +86,18 @@ jobs:
 
       - name: Version packages for alpha
         run: |
-          # Update version in all package.json files
-          cd packages/core
-          npm version ${{ steps.calc-alpha.outputs.alpha-version }} --no-git-tag-version
-          cd ../cli
-          npm version ${{ steps.calc-alpha.outputs.alpha-version }} --no-git-tag-version
-          cd ../frameworks/react
-          npm version ${{ steps.calc-alpha.outputs.alpha-version }} --no-git-tag-version
+          # Update version in package.json using node (works with workspace: protocol)
+          ALPHA_VERSION="${{ steps.calc-alpha.outputs.alpha-version }}"
+
+          # Update core package version
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('packages/core/package.json', 'utf8'));
+            pkg.version = process.env.ALPHA_VERSION;
+            fs.writeFileSync('packages/core/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          echo "✅ Updated @arweave-query/core to $ALPHA_VERSION"
 
       - name: Publish alpha to npm
         run: |

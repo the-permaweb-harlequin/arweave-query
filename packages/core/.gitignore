@@ -11,6 +11,9 @@ coverage/
 # Vitest
 .vitest/
 
+# Integration tests
+tests/integration/container-info.json
+
 # Playwright
 playwright-report/
 test-results/

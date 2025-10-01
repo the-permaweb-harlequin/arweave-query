@@ -38,6 +38,8 @@ export default defineConfig({
 
         // Waddler
         "@atticusofsparta/waddler",
+        "@atticusofsparta/waddler/duckdb-neo",
+        "@atticusofsparta/waddler/duckdb-wasm",
 
         // Storage
         "level",
@@ -56,6 +58,11 @@ export default defineConfig({
         "fs",
         "util",
       ],
+      output: {
+        // Prevent shared chunks to avoid mixing Node.js and browser dependencies
+        preserveModules: true,
+        preserveModulesRoot: "src",
+      },
     },
   },
   test: {

@@ -46,6 +46,18 @@ jobs:
           pnpm codegen
           pnpm codegen:parquet
 
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Run tests
+        run: pnpm test:run
+
       - name: Build packages
         run: pnpm build
 

@@ -1,34 +1,24 @@
-import { beforeAll, afterAll } from "vitest";
-import {
-  startArIONode,
-  stopArIONode,
-  verifyArIONode,
-  type ArIONodeContainer,
-} from "../testcontainers-helper";
+import { beforeAll } from "vitest";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
-// Global container instance
-let arIONode: ArIONodeContainer | undefined;
-
-// Setup before all tests
+// Setup before all tests - container is already running from global setup
 beforeAll(async () => {
-  console.log("Setting up integration test environment...");
+  console.log("Setting up Node.js integration test environment...");
 
-  // Start AR-IO node container
-  arIONode = await startArIONode();
+  // Read container info from global setup
+  const infoPath = resolve(__dirname, "../container-info.json");
+  const containerInfo = JSON.parse(readFileSync(infoPath, "utf-8"));
 
-  // Verify it's working
-  await verifyArIONode(arIONode);
+  console.log(`✅ Using AR-IO node at ${containerInfo.apiUrl}`);
 
-  // Make container info available globally for tests
-  (global as any).__ARIO_NODE__ = arIONode;
+  // Make available to tests
+  (global as any).__ARIO_NODE__ = {
+    apiUrl: containerInfo.apiUrl,
+    graphqlUrl: containerInfo.graphqlUrl,
+    datasetsUrl: containerInfo.datasetsUrl,
+    port: containerInfo.port,
+  };
 
-  console.log("Integration test environment ready");
-}, 240_000); // 4 minute timeout for container startup
-
-// Cleanup after all tests
-afterAll(async () => {
-  if (arIONode) {
-    await stopArIONode(arIONode);
-    (global as any).__ARIO_NODE__ = undefined;
-  }
-}, 30_000);
+  console.log("Node.js integration test environment ready");
+});

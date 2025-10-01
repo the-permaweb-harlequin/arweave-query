@@ -9,6 +9,7 @@ export default defineConfig({
     globals: true,
     testTimeout: 180000, // 3 minutes for queries
     hookTimeout: 240000, // 4 minutes for container startup
+    globalSetup: ["./tests/integration/global-setup.ts"],
     setupFiles: ["./tests/integration/node/setup.ts"],
     // Run integration tests serially to avoid port conflicts
     poolOptions: {
@@ -20,15 +21,15 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: /^@the-permaweb-harlequin\/arweave-query\/core\/node$/,
+        find: /^@arweave-query\/core\/node$/,
         replacement: resolve(__dirname, "./dist/node.js"),
       },
       {
-        find: /^@the-permaweb-harlequin\/arweave-query\/core\/web$/,
+        find: /^@arweave-query\/core\/web$/,
         replacement: resolve(__dirname, "./dist/web.js"),
       },
       {
-        find: /^@the-permaweb-harlequin\/arweave-query\/core$/,
+        find: /^@arweave-query\/core$/,
         replacement: resolve(__dirname, "./dist/index.js"),
       },
     ],

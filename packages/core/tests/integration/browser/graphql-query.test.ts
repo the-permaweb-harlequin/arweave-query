@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { GraphQLProvider } from "@arweave-query/core";
+import { GraphQLProvider } from "@arweave-query/core/web"; // Use web export
 import type { ArIONodeContainer } from "../testcontainers-helper";
 
 describe("Browser Integration - GraphQL Query", () => {

@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { ArweaveQueryClient, GraphQLProvider } from "@arweave-query/core";
+import {
+  ArweaveQueryClient,
+  GraphQLProvider,
+  type Transaction,
+} from "@arweave-query/core/web"; // Use web exports
 import { createWebParquetProvider } from "@arweave-query/core/web";
 import type { ArIONodeContainer } from "../testcontainers-helper";
-import type { Transaction } from "@arweave-query/core";
 
 describe("Browser Integration - Client Cross-Provider Validation", () => {
   let arIONode: ArIONodeContainer;
