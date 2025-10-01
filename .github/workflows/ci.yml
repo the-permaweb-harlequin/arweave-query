@@ -43,7 +43,12 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
 
       - name: Check formatting
         run: pnpm format:check
@@ -87,7 +92,12 @@ jobs:
             ${{ runner.os }}-node${{ matrix.node }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
 
       - name: Run unit tests
         run: pnpm test:run
@@ -112,7 +122,12 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
 
       - name: Build packages
         run: pnpm build
@@ -146,7 +161,12 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
 
       - name: Build all packages
         run: pnpm build

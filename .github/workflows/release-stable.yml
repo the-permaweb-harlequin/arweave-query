@@ -39,7 +39,12 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
 
       - name: Build packages
         run: pnpm build
