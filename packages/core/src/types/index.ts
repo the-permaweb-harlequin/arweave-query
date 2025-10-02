@@ -1,44 +1,83 @@
-export interface ArweaveTransaction {
-  id: string;
-  owner: string;
-  target?: string;
-  quantity: string;
-  reward: string;
-  last_tx: string;
-  tags: Array<{ name: string; value: string }>;
-  data_size: string;
-  data_root: string;
-  signature: string;
-  block?: {
-    id: string;
-    height: number;
-    timestamp: number;
-  };
-}
+import {
+  BlockFilter,
+  TagFilter,
+  SortOrder,
+  Transaction,
+  Block,
+} from "../generated/graphql";
 
-export interface QueryFilter {
+export interface TransactionsQueryFilter {
   owners?: string[];
   recipients?: string[];
-  tags?: Array<{ name: string; values: string[] }>;
-  block?: {
-    min?: number;
-    max?: number;
-  };
+  tags?: TagFilter[];
+  block?: BlockFilter;
+  first?: number;
+  after?: string;
+  sort?: SortOrder;
+}
+
+export interface BlocksQueryFilter {
+  ids?: string[];
+  height?: BlockFilter;
   first?: number;
   after?: string;
 }
 
-export interface QueryResult<T = ArweaveTransaction> {
+export interface QueryResult<T = Transaction> {
   data: T[];
   hasNextPage: boolean;
   cursor?: string;
-  totalCount?: number;
+  next?: () => Promise<QueryResult<T>>;
 }
+
+export function isDataQueryById(
+  query: DataQueryConfig,
+): query is DataQueryById {
+  return "id" in query;
+}
+
+export type DataQueryById = {
+  id: string;
+};
+
+export function isDataQueryByOffset(
+  query: DataQueryConfig,
+): query is DataQueryByOffset {
+  return (
+    "rootParentId" in query &&
+    "rootParentOffset" in query &&
+    "dataOffset" in query &&
+    "dataLength" in query
+  );
+}
+
+export type DataQueryByOffset = {
+  rootParentId: string; // L1 tx id
+  rootParentOffset: number;
+  dataOffset: number;
+  dataLength: number;
+};
+
+export type DataQueryConfig = DataQueryById | DataQueryByOffset;
 
 export interface QueryProvider {
   name: string;
-  query(filter: QueryFilter): Promise<QueryResult>;
-  getTransaction(id: string): Promise<ArweaveTransaction | null>;
+  // tx headers
+  getTransaction(id: string): Promise<Transaction>;
+  getTransactions(
+    filter: TransactionsQueryFilter,
+  ): Promise<QueryResult<Transaction>>;
+  getBlock(id: string): Promise<Block | null>;
+  getBlocks(filter: TransactionsQueryFilter): Promise<QueryResult<Block>>;
+}
+
+export interface DataProvider {
+  getData<T>(
+    params: DataQueryConfig,
+  ): Promise<{ data: T; contentType: string | undefined }>;
+  getDataStream<T>(
+    params: DataQueryConfig,
+  ): Promise<{ data: ReadableStream<T>; contentType: string | undefined }>;
 }
 
 export interface CacheProvider {
@@ -49,9 +88,9 @@ export interface CacheProvider {
 }
 
 export interface ArweaveQueryClientConfig {
-  providers: QueryProvider[];
+  transactionProvider?: QueryProvider;
+  dataProvider?: DataProvider;
   cache?: CacheProvider;
-  defaultProvider?: string;
 }
 
 export interface QueryOptions {

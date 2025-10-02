@@ -1,6 +1,14 @@
-import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
+import {
+  useQuery,
+  type UseQueryOptions,
+  type UseQueryResult,
+} from '@tanstack/react-query';
 import { useArweaveQueryContext } from '../providers/ArweaveQueryProvider.js';
-import type { QueryFilter, QueryResult, QueryOptions } from '@arweave-query/core';
+import type {
+  QueryFilter,
+  QueryResult,
+  QueryOptions,
+} from '@arweave-query/core';
 
 export interface UseArweaveQueryOptions extends QueryOptions {
   enabled?: boolean;
@@ -29,7 +37,10 @@ export function useArweaveQuery(
 export function useArweaveTransaction(
   id: string,
   options: UseArweaveQueryOptions = {}
-): UseQueryResult<import('@arweave-query/core').ArweaveTransaction | null, Error> {
+): UseQueryResult<
+  import('@arweave-query/core').ArweaveTransaction | null,
+  Error
+> {
   const { client } = useArweaveQueryContext();
 
   const queryKey = ['arweave-transaction', id, options.provider];

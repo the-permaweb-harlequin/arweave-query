@@ -66,15 +66,13 @@ export default class Query extends Command {
     });
 
     // Create client
-    const providers = [];
-    if (flags.provider === 'graphql') {
-      providers.push(new GraphQLProvider(\`\${flags.gateway}/graphql\`));
-    }
-
-    const client = new ArweaveQueryClient({ providers });
+    const provider = new GraphQLProvider(`${flags.gateway}/graphql`);
+    const client = new ArweaveQueryClient({
+      transactionProvider: provider,
+    });
 
     try {
-      const result = await client.query({
+      const result = await client.getTransactions({
         owners: flags.owner,
         recipients: flags.recipient,
         tags,
@@ -103,14 +101,15 @@ export default class Query extends Command {
       result.data.forEach((tx) => {
         const tagsStr = tx.tags
           .slice(0, 2)
-          .map((tag) => \`\${tag.name}:\${tag.value}\`)
+          .map((tag) => `${tag.name}:${tag.value}`)
           .join(', ');
-        const moreTagsStr = tx.tags.length > 2 ? \` (+\${tx.tags.length - 2} more)\` : '';
+        const moreTagsStr =
+          tx.tags.length > 2 ? ` (+${tx.tags.length - 2} more)` : '';
 
         table.push([
           tx.id,
-          tx.owner.slice(0, 20) + '...',
-          tx.target ? tx.target.slice(0, 20) + '...' : '-',
+          tx.owner.address.slice(0, 20) + '...',
+          tx.recipient ? tx.recipient.slice(0, 20) + '...' : '-',
           tx.block?.height?.toString() || '-',
           tagsStr + moreTagsStr,
         ]);
@@ -119,13 +118,13 @@ export default class Query extends Command {
       this.log(table.toString());
       this.log(
         chalk.green(
-          \`Found \${result.data.length} transactions\${
+          `Found ${result.data.length} transactions${
             result.hasNextPage ? ' (more available)' : ''
-          }\`
+          }`
         )
       );
     } catch (error) {
-      this.error(\`Query failed: \${error}\`);
+      this.error(`Query failed: ${error}`);
     }
   }
 }

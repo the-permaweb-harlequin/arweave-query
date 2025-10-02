@@ -5,33 +5,79 @@
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/**/?(*.)+(spec|test).tsx?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/vitest.config.[jt]s",
+      "!{projectRoot}/vite.config.[jt]s",
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s",
+      "!{projectRoot}/tests/**/*",
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/eslint.config.js"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/.eslintrc.json",
+      "{workspaceRoot}/eslint.config.js",
+      "{workspaceRoot}/prettier.config.js",
+      "{workspaceRoot}/.prettierrc"
+    ]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"],
+      "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
     "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.config.ts"],
+      "outputs": ["{projectRoot}/coverage"],
       "cache": true
     },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "inputs": ["default", "^production"],
+      "cache": false
+    },
+    "test:integration:node": {
+      "dependsOn": ["build"],
+      "inputs": ["default", "^production"],
+      "cache": false
+    },
+    "test:integration:browser": {
+      "dependsOn": ["build"],
+      "inputs": ["default", "^production"],
+      "cache": false
+    },
     "lint": {
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json", "{workspaceRoot}/eslint.config.js"],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/eslint.config.js"
+      ],
       "cache": true
     },
     "type-check": {
       "dependsOn": ["^build"],
-      "inputs": ["default", "^production"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tsconfig.base.json"
+      ],
       "cache": true
+    },
+    "format": {
+      "inputs": ["default", "{workspaceRoot}/.prettierrc"],
+      "cache": true
+    },
+    "format:check": {
+      "inputs": ["default", "{workspaceRoot}/.prettierrc"],
+      "cache": true
+    },
+    "clean": {
+      "cache": false
     }
   },
   "generators": {
@@ -51,15 +97,20 @@
       }
     }
   },
-  "release": {
-    "projects": ["packages/*", "packages/frameworks/*"],
-    "changelog": {
-      "workspaceChangelog": {
-        "createRelease": "github"
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "test",
+          "lint",
+          "type-check",
+          "format",
+          "format:check"
+        ]
       }
-    },
-    "version": {
-      "preVersionCommand": "pnpm build"
     }
-  }
+  },
+  "defaultBase": "main"
 }

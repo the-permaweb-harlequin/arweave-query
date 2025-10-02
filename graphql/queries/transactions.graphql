@@ -16,14 +16,16 @@ query transactions(
   ) {
     pageInfo {
       hasNextPage
-      endCursor
     }
     edges {
       cursor
       node {
         id
+        anchor
+        signature
         owner {
           address
+          key
         }
         recipient
         tags {
@@ -34,12 +36,15 @@ query transactions(
           id
           height
           timestamp
+          previous
         }
         fee {
           winston
+          ar
         }
         quantity {
           winston
+          ar
         }
         data {
           size
@@ -53,8 +58,11 @@ query transactions(
 query transaction($id: ID!) {
   transaction(id: $id) {
     id
+    anchor
+    signature
     owner {
       address
+      key
     }
     recipient
     tags {
@@ -65,12 +73,15 @@ query transaction($id: ID!) {
       id
       height
       timestamp
+      previous
     }
     fee {
       winston
+      ar
     }
     quantity {
       winston
+      ar
     }
     data {
       size

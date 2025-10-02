@@ -1,5 +1,9 @@
 // Provider
-export { ArweaveQueryProvider, useArweaveQueryContext, type ArweaveQueryProviderProps } from './providers/ArweaveQueryProvider.js';
+export {
+  ArweaveQueryProvider,
+  useArweaveQueryContext,
+  type ArweaveQueryProviderProps,
+} from './providers/ArweaveQueryProvider.js';
 
 // Hooks
 export * from './hooks/index.js';

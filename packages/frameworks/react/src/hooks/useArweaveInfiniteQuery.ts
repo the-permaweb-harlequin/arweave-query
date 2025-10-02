@@ -1,6 +1,14 @@
-import { useInfiniteQuery, type UseInfiniteQueryOptions, type UseInfiniteQueryResult } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  type UseInfiniteQueryOptions,
+  type UseInfiniteQueryResult,
+} from '@tanstack/react-query';
 import { useArweaveQueryContext } from '../providers/ArweaveQueryProvider.js';
-import type { QueryFilter, QueryResult, QueryOptions } from '@arweave-query/core';
+import type {
+  QueryFilter,
+  QueryResult,
+  QueryOptions,
+} from '@arweave-query/core';
 
 export interface UseArweaveInfiniteQueryOptions extends QueryOptions {
   enabled?: boolean;

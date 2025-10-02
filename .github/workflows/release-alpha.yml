@@ -1,0 +1,213 @@
+name: Release (Alpha)
+
+on:
+  push:
+    branches: [alpha]
+
+concurrency:
+  group: release-alpha
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release Alpha Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Run tests
+        run: pnpm test:run
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Get current version
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Calculate alpha version
+        id: calc-alpha
+        run: |
+          # Get the current version
+          CURRENT_VERSION="${{ steps.get-version.outputs.version }}"
+
+          # Extract base version (remove any pre-release tags)
+          BASE_VERSION=$(echo $CURRENT_VERSION | sed -E 's/-.*$//')
+
+          # If version is 0.0.0, bump to 0.1.0 for first alpha
+          if [ "$BASE_VERSION" == "0.0.0" ]; then
+            BASE_VERSION="0.1.0"
+            echo "📈 Bumping from 0.0.0 to ${BASE_VERSION} for first release"
+          fi
+
+          # Get current timestamp for unique alpha version
+          TIMESTAMP=$(date +%s)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          # Create alpha version: X.Y.Z-alpha.TIMESTAMP.SHA
+          ALPHA_VERSION="${BASE_VERSION}-alpha.${TIMESTAMP}.${SHORT_SHA}"
+
+          echo "alpha-version=$ALPHA_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Alpha version: $ALPHA_VERSION"
+
+      - name: Version packages for alpha
+        run: |
+          ALPHA_VERSION="${{ steps.calc-alpha.outputs.alpha-version }}"
+
+          # Update core package version using node with inline argument
+          node -e "
+            const fs = require('fs');
+            const version = process.argv[1];
+            const pkg = JSON.parse(fs.readFileSync('packages/core/package.json', 'utf8'));
+            pkg.version = version;
+            fs.writeFileSync('packages/core/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          " "$ALPHA_VERSION"
+
+          echo "✅ Updated @arweave-query/core to $ALPHA_VERSION"
+
+      - name: Publish alpha to npm
+        run: |
+          cd packages/core
+          npm publish --tag alpha --access public --provenance
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create alpha release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.calc-alpha.outputs.alpha-version }}
+          name: Alpha Release v${{ steps.calc-alpha.outputs.alpha-version }}
+          body: |
+            🚀 Alpha release of @arweave-query/core
+
+            **Version:** ${{ steps.calc-alpha.outputs.alpha-version }}
+            **Commit:** ${{ github.sha }}
+            **Branch:** alpha
+
+            Install with:
+            ```bash
+            npm install @arweave-query/core@alpha
+            # or
+            pnpm add @arweave-query/core@alpha
+            ```
+
+            ⚠️ **Warning:** This is an alpha release and may contain unstable features.
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.release.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=:test_tube:" >> $GITHUB_OUTPUT
+            echo "color=#ffa500" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=:x:" >> $GITHUB_OUTPUT
+            echo "color=#ff0000" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get alpha version
+        id: version
+        if: needs.release.result == 'success'
+        run: |
+          # Extract version from previous job outputs if available
+          echo "version=Latest alpha" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.status.outputs.emoji }} Alpha Release ${{ steps.status.outputs.status }}",
+              "attachments": [
+                {
+                  "color": "${{ steps.status.outputs.color }}",
+                  "fields": [
+                    {
+                      "title": "Package",
+                      "value": "@arweave-query/core@alpha",
+                      "short": true
+                    },
+                    {
+                      "title": "Environment",
+                      "value": "Alpha (alpha branch)",
+                      "short": true
+                    },
+                    {
+                      "title": "Status",
+                      "value": "${{ steps.status.outputs.status }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Install",
+                      "value": "`npm install @arweave-query/core@alpha`",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
+                      "short": false
+                    },
+                    {
+                      "title": "Workflow",
+                      "value": "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>",
+                      "short": false
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

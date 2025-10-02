@@ -6,7 +6,12 @@ export default defineConfig({
   plugins: [
     dts({
       insertTypesEntry: true,
-      exclude: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/*.test.tsx',
+        '**/*.spec.tsx',
+      ],
     }),
   ],
   build: {
@@ -19,7 +24,7 @@ export default defineConfig({
         'react',
         'react-dom',
         '@tanstack/react-query',
-        '@arweave-query/core',
+        '@arweave-query/core-core',
       ],
     },
   },

@@ -1,101 +1,198 @@
 name: CI
 
 on:
-    push:
-        branches: [main, alpha]
-    pull_request:
-        branches: [main, alpha]
+  pull_request:
+    branches: ['**']
+  push:
+    branches: [main, alpha]
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                node-version: [18, 20]
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ matrix.node-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v2
-              with:
-                  version: 8
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-            - name: Get pnpm store directory
-              shell: bash
-              run: |
-                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
-            - name: Setup pnpm cache
-              uses: actions/cache@v3
-              with:
-                  path: ${{ env.STORE_PATH }}
-                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-store-
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
 
-            - name: Lint
-              run: pnpm lint
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
 
-            - name: Type check
-              run: pnpm type-check
+      - name: Check formatting
+        run: pnpm format:check
 
-            - name: Test
-              run: pnpm test:run
+      - name: Lint
+        run: pnpm lint
 
-            - name: Build
-              run: pnpm build
+      - name: Type check
+        run: pnpm type-check
 
-    release:
-        needs: test
-        runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22]
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
 
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v2
-              with:
-                  version: 8
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
-            - name: Build packages
-              run: pnpm build
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-node${{ matrix.node }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node${{ matrix.node }}-pnpm-store-
 
-            - name: Create Release Pull Request or Publish
-              id: changesets
-              uses: changesets/action@v1
-              with:
-                  publish: pnpm release
-                  commit: "chore: release packages"
-                  title: "chore: release packages"
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
+
+      - name: Run unit tests
+        run: pnpm test:run
+
+      - name: Build packages
+        run: pnpm build
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Run integration tests (Node)
+        run: cd packages/core && pnpm test:integration:node
+        env:
+          ARIO_IMAGE: ghcr.io/ar-io/ar-io-core:latest
+
+      # Browser integration tests skipped due to Testcontainers being Node.js-only
+      # The Node.js tests already validate both Node and Web builds work correctly
+      # - name: Install Playwright browsers
+      #   run: cd packages/core && pnpm exec playwright install --with-deps chromium
+      #
+      # - name: Run integration tests (Browser)
+      #   run: cd packages/core && pnpm test:integration:browser
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate code
+        run: |
+          pnpm codegen
+          pnpm codegen:parquet
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Check build artifacts
+        run: |
+          test -f packages/core/dist/index.js || exit 1
+          test -f packages/core/dist/node.js || exit 1
+          test -f packages/core/dist/web.js || exit 1
+          echo "✅ All build artifacts present"
+
+  all-checks-passed:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [quality, test, build]
+    if: always()
+
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [ "${{ needs.quality.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ One or more checks failed"
+            exit 1
+          fi
+          echo "✅ All checks passed!"

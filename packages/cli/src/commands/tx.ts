@@ -5,9 +5,7 @@ import chalk from 'chalk';
 export default class Tx extends Command {
   static description = 'Get transaction details';
 
-  static examples = [
-    '<%= config.bin %> <%= command.id %> 1234567890abcdef',
-  ];
+  static examples = ['<%= config.bin %> <%= command.id %> 1234567890abcdef'];
 
   static args = {
     id: Args.string({
@@ -37,12 +35,10 @@ export default class Tx extends Command {
     const { args, flags } = await this.parse(Tx);
 
     // Create client
-    const providers = [];
-    if (flags.provider === 'graphql') {
-      providers.push(new GraphQLProvider(\`\${flags.gateway}/graphql\`));
-    }
-
-    const client = new ArweaveQueryClient({ providers });
+    const provider = new GraphQLProvider(`${flags.gateway}/graphql`);
+    const client = new ArweaveQueryClient({
+      transactionProvider: provider,
+    });
 
     try {
       const tx = await client.getTransaction(args.id);
@@ -58,27 +54,29 @@ export default class Tx extends Command {
       }
 
       this.log(chalk.bold('Transaction Details:'));
-      this.log(\`ID: \${tx.id}\`);
-      this.log(\`Owner: \${tx.owner}\`);
-      this.log(\`Target: \${tx.target || 'None'}\`);
-      this.log(\`Quantity: \${tx.quantity} winston\`);
-      this.log(\`Reward: \${tx.reward} winston\`);
-      this.log(\`Data Size: \${tx.data_size} bytes\`);
+      this.log(`ID: ${tx.id}`);
+      this.log(`Owner: ${tx.owner.address}`);
+      this.log(`Target: ${tx.recipient || 'None'}`);
+      this.log(`Quantity: ${tx.quantity.winston} winston`);
+      this.log(`Fee: ${tx.fee.winston} winston`);
+      this.log(`Data Size: ${tx.data.size} bytes`);
 
       if (tx.block) {
-        this.log(\`Block Height: \${tx.block.height}\`);
-        this.log(\`Block ID: \${tx.block.id}\`);
-        this.log(\`Timestamp: \${new Date(tx.block.timestamp * 1000).toISOString()}\`);
+        this.log(`Block Height: ${tx.block.height}`);
+        this.log(`Block ID: ${tx.block.id}`);
+        this.log(
+          `Timestamp: ${new Date(tx.block.timestamp * 1000).toISOString()}`
+        );
       }
 
       if (tx.tags.length > 0) {
-        this.log(chalk.bold('\\nTags:'));
+        this.log(chalk.bold('\nTags:'));
         tx.tags.forEach((tag) => {
-          this.log(\`  \${tag.name}: \${tag.value}\`);
+          this.log(`  ${tag.name}: ${tag.value}`);
         });
       }
     } catch (error) {
-      this.error(\`Failed to get transaction: \${error}\`);
+      this.error(`Failed to get transaction: ${error}`);
     }
   }
 }
