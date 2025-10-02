@@ -25,29 +25,28 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        // GraphQL
+        // GraphQL - keep as peer dependencies
         "graphql",
         "graphql-request",
         "graphql-tag",
 
-        // DuckDB - exclude all DuckDB packages and bindings
+        // DuckDB - native bindings must stay external
         "duckdb",
         "@duckdb/duckdb-wasm",
         "@duckdb/node-api",
         /^@duckdb\/.*/,
 
-        // Waddler
+        // Waddler - utility wrapper, external with subpath exports
         "@atticusofsparta/waddler",
-        "@atticusofsparta/waddler/duckdb-neo",
-        "@atticusofsparta/waddler/duckdb-wasm",
+        /^@atticusofsparta\/waddler\/.*/,
 
-        // Storage
+        // Wayfinder - data provider, external
+        "@ar.io/wayfinder-core",
+
+        // Storage - has native bindings
         "level",
         "level-web",
         "memory-level",
-
-        // Wayfinder
-        "@ar.io/wayfinder-core",
 
         // Node built-ins
         /^node:.*/,
