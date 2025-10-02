@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "Core client and provider interfaces for querying Arweave data",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
@@ -26,16 +27,19 @@
   "license": "MIT",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./node": {
+      "types": "./dist/node.d.ts",
       "import": "./dist/node.js",
-      "types": "./dist/node.d.ts"
+      "require": "./dist/node.cjs"
     },
     "./web": {
+      "types": "./dist/web.d.ts",
       "import": "./dist/web.js",
-      "types": "./dist/web.d.ts"
+      "require": "./dist/web.cjs"
     }
   },
   "files": [

@@ -21,7 +21,7 @@ export default defineConfig({
         node: resolve(__dirname, "src/node.ts"),
         web: resolve(__dirname, "src/web.ts"),
       },
-      formats: ["es"],
+      formats: ["es", "cjs"],
     },
     rollupOptions: {
       external: [
@@ -58,11 +58,22 @@ export default defineConfig({
         "fs",
         "util",
       ],
-      output: {
-        // Prevent shared chunks to avoid mixing Node.js and browser dependencies
-        preserveModules: true,
-        preserveModulesRoot: "src",
-      },
+      output: [
+        {
+          // ESM output
+          format: "es",
+          preserveModules: true,
+          preserveModulesRoot: "src",
+          entryFileNames: "[name].js",
+        },
+        {
+          // CJS output
+          format: "cjs",
+          preserveModules: true,
+          preserveModulesRoot: "src",
+          entryFileNames: "[name].cjs",
+        },
+      ],
     },
   },
   test: {
