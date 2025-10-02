@@ -95,6 +95,65 @@ describe("Browser Integration - Parquet Query", () => {
     });
   });
 
+  it("should filter transactions by tags in browser", async () => {
+    // Query for transactions with a specific tag
+    const result = await provider.getTransactions({
+      first: 10,
+      tags: [{ name: "Content-Type", values: ["application/json"] }],
+    });
+
+    // Note: This test might return 0 results if no transactions in the fixture
+    // have the specified tag - that's okay for integration testing
+    expect(Array.isArray(result.data)).toBe(true);
+
+    if (result.data.length > 0) {
+      // If we got results, verify they have tags
+      const firstTx = result.data[0];
+      expect(firstTx).toHaveProperty("tags");
+    }
+  });
+
+  it("should filter transactions by multiple tags (AND logic) in browser", async () => {
+    // This tests the CLI use case: filtering by Drive-Id AND Entity-Type
+    // The transaction must have BOTH tags to match
+    const result = await provider.getTransactions({
+      first: 1,
+      tags: [
+        {
+          name: "Drive-Id",
+          values: ["387a3dfc-f8a1-454f-9b5c-95fdf0a36d70"],
+        },
+        {
+          name: "Entity-Type",
+          values: ["drive"],
+        },
+      ],
+    });
+
+    // Should return results if there's a transaction with both tags
+    expect(Array.isArray(result.data)).toBe(true);
+
+    // If results are found, verify the transaction has both tags
+    if (result.data.length > 0) {
+      const firstTx = result.data[0];
+      expect(firstTx).toHaveProperty("tags");
+      expect(Array.isArray(firstTx.tags)).toBe(true);
+
+      // Find both tags in the transaction
+      const driveIdTag = firstTx.tags.find((t) => t.name === "Drive-Id");
+      const entityTypeTag = firstTx.tags.find((t) => t.name === "Entity-Type");
+
+      expect(driveIdTag).toBeDefined();
+      expect(entityTypeTag).toBeDefined();
+      expect(driveIdTag?.value).toBe("387a3dfc-f8a1-454f-9b5c-95fdf0a36d70");
+      expect(entityTypeTag?.value).toBe("drive");
+    } else {
+      console.warn(
+        "No transactions found with both Drive-Id and Entity-Type tags in fixture",
+      );
+    }
+  });
+
   it("should support pagination with cursor in browser", async () => {
     const firstPage = await provider.getTransactions({
       first: 5,

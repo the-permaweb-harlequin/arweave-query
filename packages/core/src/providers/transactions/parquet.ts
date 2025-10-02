@@ -240,6 +240,7 @@ export class ParquetProvider implements QueryProvider {
     );
 
     // Build tag filter conditions
+    // Each condition matches one tag name/value pair
     const tagConditions = tags!.map((tagFilter) => {
       if (tagFilter.values.length === 1) {
         return this
@@ -250,18 +251,25 @@ export class ParquetProvider implements QueryProvider {
       }
     });
 
+    // Join tag conditions with OR (since each tag is a separate row)
     const tagWhere = tagConditions.reduce((combined, condition) =>
-      combined ? this.sql`${combined} AND ${condition}` : condition,
+      combined ? this.sql`${combined} OR ${condition}` : condition,
     );
 
-    // Combine WHERE conditions properly
-    const combinedWhere = this.sql`${whereConditions} AND ${tagWhere}`;
+    // Use GROUP BY + HAVING to ensure ALL tag filters match
+    // This is necessary because tags are in separate rows
+    const requiredTagCount = tags!.length;
+
+    // Get all transaction field names for GROUP BY
+    const txFields = FieldSelector.getTransactionFieldsWithPrefix("tx");
 
     return await this.sql`
-      SELECT DISTINCT ${this.sql.raw(FieldSelector.getTransactionFieldsWithPrefix("tx"))}
+      SELECT ${this.sql.raw(txFields)}
       FROM read_parquet(${this.parquetUrls.transactions}) tx
       INNER JOIN read_parquet(${this.parquetUrls.tags}) t ON tx.id = t.id
-      WHERE ${combinedWhere}
+      WHERE ${whereConditions} AND (${tagWhere})
+      GROUP BY ${this.sql.raw(txFields)}
+      HAVING COUNT(DISTINCT t.tag_name) >= ${requiredTagCount}
       ${orderByWithPrefix}
       LIMIT ${limit + 1}
       OFFSET ${offset}
